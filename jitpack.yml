@@ -1,0 +1,15 @@
+jdk:
+  - openjdk17
+
+install:
+  - |
+    case "$VERSION" in
+      foundation-core-v*)
+        ./gradlew :foundation-core:testDebugUnitTest :foundation-core:publishReleasePublicationToMavenLocal
+        ;;
+      *)
+        echo "Unsupported JitPack version tag: $VERSION"
+        echo "Use a module-scoped tag, for example: foundation-core-v0.1.0"
+        exit 1
+        ;;
+    esac

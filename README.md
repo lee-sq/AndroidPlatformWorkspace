@@ -49,6 +49,55 @@ AndroidPlatformWorkspace/
 foundation-core/build/outputs/aar/foundation-core-debug.aar
 ```
 
+## JitPack 发布约定
+
+本仓库按多 library module 管理，每个 module 独立发版。不要使用全仓统一的 `vX.Y.Z` tag，统一使用 module-scoped tag：
+
+```text
+<module-name>-v<semver>
+```
+
+当前 `foundation-core` 的 tag 示例：
+
+```bash
+git tag foundation-core-v0.1.0
+git push origin foundation-core-v0.1.0
+```
+
+`gradle.properties` 中的 `foundation-core.version` 仅作为本地发布默认版本。JitPack 构建时使用 Git tag 作为最终依赖版本。
+
+JitPack 会根据 tag 前缀只发布对应 module。当前支持：
+
+```text
+foundation-core-v* -> :foundation-core
+```
+
+发布前建议本地验证：
+
+```bash
+VERSION=foundation-core-v0.1.0 ./gradlew :foundation-core:testDebugUnitTest :foundation-core:publishReleasePublicationToMavenLocal
+```
+
+业务方接入 `foundation-core`：
+
+```kotlin
+repositories {
+    google()
+    mavenCentral()
+    maven("https://jitpack.io")
+}
+
+dependencies {
+    implementation("com.github.lee-sq.AndroidPlatformWorkspace:foundation-core:foundation-core-v0.1.0")
+}
+```
+
+新增 module 后，需要：
+
+1. 在 `settings.gradle.kts` 添加 `include(":module-name")`。
+2. 在 `jitpack.yml` 添加对应 tag 前缀和发布任务。
+3. 使用 `<module-name>-v<semver>` 打 tag。
+
 ## 能力范围
 
 本仓库适合沉淀：
