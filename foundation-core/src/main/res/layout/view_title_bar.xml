@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ImageButton
+        android:id="@+id/titleBackButton"
+        android:layout_width="@dimen/foundation_title_bar_back_size"
+        android:layout_height="@dimen/foundation_title_bar_back_size"
+        android:background="@android:color/transparent"
+        android:contentDescription="@string/foundation_cancel"
+        android:src="@drawable/ic_foundation_back" />
+
+    <TextView
+        android:id="@+id/titleTextView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/foundation_space_md"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:includeFontPadding="false"
+        android:singleLine="true"
+        android:textColor="@color/foundation_text_primary"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <FrameLayout
+        android:id="@+id/titleActionContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:minWidth="@dimen/foundation_title_bar_back_size" />
+</merge>

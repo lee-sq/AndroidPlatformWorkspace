@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/foundation_surface_alt" />
+    <corners android:radius="@dimen/foundation_radius_lg" />
+    <padding
+        android:left="@dimen/foundation_space_md"
+        android:top="@dimen/foundation_space_md"
+        android:right="@dimen/foundation_space_md"
+        android:bottom="@dimen/foundation_space_md" />
+</shape>

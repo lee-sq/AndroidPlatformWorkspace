@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/foundation_calendar_date_cell_height"
+    android:layout_marginTop="@dimen/foundation_space_xs"
+    android:foreground="?android:attr/selectableItemBackgroundBorderless">
+
+    <View
+        android:id="@+id/rangeBackground"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/foundation_calendar_date_dot_size"
+        android:layout_gravity="center"
+        android:visibility="gone" />
+
+    <View
+        android:id="@+id/rangeBackgroundStart"
+        android:layout_width="@dimen/foundation_calendar_date_dot_size"
+        android:layout_height="@dimen/foundation_calendar_date_dot_size"
+        android:layout_gravity="center_vertical|end"
+        android:visibility="gone" />
+
+    <View
+        android:id="@+id/rangeBackgroundEnd"
+        android:layout_width="@dimen/foundation_calendar_date_dot_size"
+        android:layout_height="@dimen/foundation_calendar_date_dot_size"
+        android:layout_gravity="center_vertical|start"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/dateText"
+        android:layout_width="@dimen/foundation_calendar_date_dot_size"
+        android:layout_height="@dimen/foundation_calendar_date_dot_size"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:textColor="@color/foundation_text_primary"
+        android:textSize="16sp"
+        tools:text="18" />
+</FrameLayout>

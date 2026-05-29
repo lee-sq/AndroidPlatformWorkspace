@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/pickerRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_foundation_picker_sheet"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/foundation_picker_padding_horizontal"
+    android:paddingTop="@dimen/foundation_picker_padding_top"
+    android:paddingEnd="@dimen/foundation_picker_padding_horizontal"
+    android:paddingBottom="@dimen/foundation_picker_padding_bottom">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/foundation_picker_header_height">
+
+        <TextView
+            android:id="@+id/cancelButton"
+            style="@style/Widget_Foundation_PickerLinkAction"
+            android:layout_gravity="center_vertical|start"
+            android:text="@string/foundation_picker_cancel" />
+
+        <TextView
+            android:id="@+id/titleText"
+            style="@style/Widget_Foundation_PickerTitle"
+            android:layout_gravity="center"
+            android:text="@string/foundation_date_time_title" />
+
+        <TextView
+            android:id="@+id/confirmButton"
+            style="@style/Widget_Foundation_PickerLinkAction"
+            android:layout_gravity="center_vertical|end"
+            android:text="@string/foundation_picker_confirm" />
+    </FrameLayout>
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="@dimen/foundation_space_sm"
+        android:background="@color/foundation_border" />
+
+    <FrameLayout
+        android:id="@+id/wheelFrame"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/foundation_datetime_picker_height"
+        android:layout_marginTop="@dimen/foundation_space_lg">
+
+        <View
+            android:id="@+id/selectionBackground"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/foundation_datetime_picker_selection_height"
+            android:layout_gravity="center"
+            android:layout_marginHorizontal="@dimen/foundation_space_lg"
+            android:background="@drawable/bg_foundation_datetime_picker_selection" />
+
+        <LinearLayout
+            android:id="@+id/wheelContainer"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/foundation_datetime_picker_height"
+            android:baselineAligned="false"
+            android:orientation="horizontal"
+            android:weightSum="5">
+
+            <com.holderzone.foundation.core.ui.datetime.DateTimeWheelView
+                android:id="@+id/yearWheel"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
+
+            <com.holderzone.foundation.core.ui.datetime.DateTimeWheelView
+                android:id="@+id/monthWheel"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
+
+            <com.holderzone.foundation.core.ui.datetime.DateTimeWheelView
+                android:id="@+id/dayWheel"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
+
+            <com.holderzone.foundation.core.ui.datetime.DateTimeWheelView
+                android:id="@+id/hourWheel"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
+
+            <com.holderzone.foundation.core.ui.datetime.DateTimeWheelView
+                android:id="@+id/minuteWheel"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
+        </LinearLayout>
+    </FrameLayout>
+</LinearLayout>

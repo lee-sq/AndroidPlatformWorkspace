@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="InputField">
+        <attr name="inputLabel" format="string" />
+        <attr name="inputHint" format="string" />
+        <attr name="inputBackground" format="reference" />
+        <attr name="inputLeadingIcon" format="reference" />
+        <attr name="inputClearIcon" format="reference" />
+        <attr name="inputPasswordHiddenIcon" format="reference" />
+        <attr name="inputPasswordVisibleIcon" format="reference" />
+        <attr name="inputIconSize" format="dimension" />
+        <attr name="inputHeight" format="dimension" />
+        <attr name="inputMaxLength" format="integer" />
+        <attr name="inputMode" format="enum">
+            <enum name="text" value="0" />
+            <enum name="digits" value="1" />
+            <enum name="password" value="2" />
+        </attr>
+    </declare-styleable>
+
+    <declare-styleable name="TitleBar">
+        <attr name="titleText" format="string" />
+        <attr name="backVisible" format="boolean" />
+        <attr name="backIcon" format="reference" />
+        <attr name="backBackground" format="reference" />
+        <attr name="backIconSize" format="dimension" />
+    </declare-styleable>
+</resources>

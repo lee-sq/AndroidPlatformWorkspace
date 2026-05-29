@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="ThemeOverlay_Foundation_Dialog" parent="Theme.AppCompat.Dialog.Alert" />
+
+    <style name="Animation_Foundation_Dropdown">
+        <item name="android:windowEnterAnimation">@anim/foundation_dropdown_enter</item>
+        <item name="android:windowExitAnimation">@anim/foundation_dropdown_exit</item>
+    </style>
+
+    <style name="Animation_Foundation_Picker" parent="@android:style/Animation">
+        <item name="android:windowEnterAnimation">@anim/foundation_picker_slide_in</item>
+        <item name="android:windowExitAnimation">@anim/foundation_picker_slide_out</item>
+    </style>
+
+    <style name="Widget_Foundation_KeypadKey">
+        <item name="android:background">@drawable/bg_foundation_keypad_key</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">false</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:gravity">center</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:textColor">@color/foundation_text_primary</item>
+        <item name="android:textSize">24sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Widget_Foundation_PickerTitle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:gravity">center</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Widget_Foundation_PickerLinkAction">
+        <item name="android:layout_width">72dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:background">?android:attr/selectableItemBackgroundBorderless</item>
+        <item name="android:gravity">center</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:minHeight">44dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Widget_Foundation_CalendarMonthPanel">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+
+    <style name="Widget_Foundation_CalendarMonthToolbar">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">44dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+    </style>
+
+    <style name="Widget_Foundation_CalendarNavButton">
+        <item name="android:layout_width">@dimen/foundation_calendar_nav_size</item>
+        <item name="android:layout_height">@dimen/foundation_calendar_nav_size</item>
+        <item name="android:background">?android:attr/selectableItemBackgroundBorderless</item>
+        <item name="android:padding">8dp</item>
+        <item name="android:scaleType">centerInside</item>
+    </style>
+
+    <style name="Widget_Foundation_CalendarMonthTitle">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:gravity">center</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Widget_Foundation_CalendarWeekdayRow">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/foundation_calendar_weekday_height</item>
+        <item name="android:layout_marginTop">@dimen/foundation_space_lg</item>
+        <item name="android:gravity">center</item>
+        <item name="android:orientation">horizontal</item>
+    </style>
+
+    <style name="Widget_Foundation_CalendarWeekdayText">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:gravity">center</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+</resources>

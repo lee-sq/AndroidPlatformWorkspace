@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <TextView
+        android:id="@+id/inputLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:includeFontPadding="false"
+        android:textColor="@color/foundation_text_secondary"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/inputContainer"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/foundation_input_height"
+        android:background="@drawable/bg_foundation_input"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/foundation_input_padding_horizontal"
+        android:paddingEnd="@dimen/foundation_input_icon_padding_end">
+
+        <ImageView
+            android:id="@+id/inputLeadingIcon"
+            android:layout_width="@dimen/foundation_input_icon_size"
+            android:layout_height="@dimen/foundation_input_icon_size"
+            android:layout_marginEnd="@dimen/foundation_space_sm"
+            android:importantForAccessibility="no"
+            android:scaleType="fitCenter"
+            android:visibility="gone" />
+
+        <EditText
+            android:id="@+id/inputEditText"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:gravity="center_vertical"
+            android:includeFontPadding="false"
+            android:inputType="text"
+            android:maxLines="1"
+            android:padding="0dp"
+            android:singleLine="true"
+            android:textColor="@color/foundation_text_primary"
+            android:textColorHint="@color/foundation_text_muted"
+            android:textSize="15sp" />
+
+        <ImageButton
+            android:id="@+id/inputClearButton"
+            android:layout_width="@dimen/foundation_input_icon_touch_size"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/foundation_cancel"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_foundation_clear"
+            android:visibility="gone" />
+
+        <ImageButton
+            android:id="@+id/inputPasswordToggleButton"
+            android:layout_width="@dimen/foundation_input_icon_touch_size"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/foundation_show_password"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_foundation_eye_closed"
+            android:visibility="gone" />
+    </LinearLayout>
+</merge>

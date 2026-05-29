@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="foundation_transparent">#00000000</color>
+    <color name="foundation_white">#FFFFFFFF</color>
+    <color name="foundation_black">#FF000000</color>
+    <color name="foundation_overlay_dim">#99000000</color>
+    <color name="foundation_primary">#3370FF</color>
+    <color name="foundation_primary_pressed">#2E5FD1</color>
+    <color name="foundation_primary_soft">#EFF4FF</color>
+    <color name="foundation_text_primary">#17233D</color>
+    <color name="foundation_text_secondary">#344563</color>
+    <color name="foundation_text_muted">#6B778C</color>
+    <color name="foundation_text_disabled">#B8C0CC</color>
+    <color name="foundation_surface">#FFFFFFFF</color>
+    <color name="foundation_surface_alt">#F6F8FC</color>
+    <color name="foundation_surface_input">#FFFFFFFF</color>
+    <color name="foundation_border">#D8E0EC</color>
+    <color name="foundation_error">#FF4D4F</color>
+    <color name="foundation_success">#10B981</color>
+    <color name="foundation_toast_normal">#CC000000</color>
+    <color name="foundation_toast_text">#FFFFFF</color>
+    <color name="foundation_toast_error">#D50000</color>
+    <color name="foundation_toast_info">#3F51B5</color>
+    <color name="foundation_toast_success">#388E3C</color>
+    <color name="foundation_toast_warning">#FFA900</color>
+</resources>

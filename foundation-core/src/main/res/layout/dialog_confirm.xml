@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dialogRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_foundation_dialog"
+    android:orientation="vertical"
+    android:padding="@dimen/foundation_space_xl">
+
+    <TextView
+        android:id="@+id/dialogTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:includeFontPadding="false"
+        android:textColor="@color/foundation_text_primary"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/dialogMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/foundation_space_md"
+        android:lineSpacingExtra="3dp"
+        android:textColor="@color/foundation_text_secondary"
+        android:textSize="15sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:layout_marginTop="@dimen/foundation_space_xl"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/cancelButton"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="@dimen/foundation_space_md"
+            android:layout_weight="1"
+            android:background="@drawable/bg_foundation_button_secondary"
+            android:gravity="center"
+            android:text="@string/foundation_cancel"
+            android:textColor="@color/foundation_text_secondary"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/confirmButton"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/bg_foundation_button_primary"
+            android:gravity="center"
+            android:text="@string/foundation_confirm"
+            android:textColor="@color/foundation_white"
+            android:textSize="15sp" />
+    </LinearLayout>
+</LinearLayout>

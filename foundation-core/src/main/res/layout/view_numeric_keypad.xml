@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <LinearLayout
+        android:id="@+id/foundationKeypadRow1"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/foundation_keypad_key_height"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/foundationKeypadKey1"
+            style="@style/Widget_Foundation_KeypadKey"
+            android:layout_width="@dimen/foundation_keypad_key_width"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="@dimen/foundation_keypad_key_gap"
+            android:contentDescription="@string/foundation_keypad_digit_1"
+            android:text="1" />
+
+        <TextView
+            android:id="@+id/foundationKeypadKey2"
+            style="@style/Widget_Foundation_KeypadKey"
+            android:layout_width="@dimen/foundation_keypad_key_width"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="@dimen/foundation_keypad_key_gap"
+            android:contentDescription="@string/foundation_keypad_digit_2"
+            android:text="2" />
+
+        <TextView
+            android:id="@+id/foundationKeypadKey3"
+            style="@style/Widget_Foundation_KeypadKey"
+            android:layout_width="@dimen/foundation_keypad_key_width"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/foundation_keypad_digit_3"
+            android:text="3" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/foundationKeypadRow2"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/foundation_keypad_key_height"
+        android:layout_marginTop="@dimen/foundation_keypad_key_gap"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/foundationKeypadKey4"
+            style="@style/Widget_Foundation_KeypadKey"
+            android:layout_width="@dimen/foundation_keypad_key_width"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="@dimen/foundation_keypad_key_gap"
+            android:contentDescription="@string/foundation_keypad_digit_4"
+            android:text="4" />
+
+        <TextView
+            android:id="@+id/foundationKeypadKey5"
+            style="@style/Widget_Foundation_KeypadKey"
+            android:layout_width="@dimen/foundation_keypad_key_width"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="@dimen/foundation_keypad_key_gap"
+            android:contentDescription="@string/foundation_keypad_digit_5"
+            android:text="5" />
+
+        <TextView
+            android:id="@+id/foundationKeypadKey6"
+            style="@style/Widget_Foundation_KeypadKey"
+            android:layout_width="@dimen/foundation_keypad_key_width"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/foundation_keypad_digit_6"
+            android:text="6" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/foundationKeypadRow3"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/foundation_keypad_key_height"
+        android:layout_marginTop="@dimen/foundation_keypad_key_gap"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/foundationKeypadKey7"
+            style="@style/Widget_Foundation_KeypadKey"
+            android:layout_width="@dimen/foundation_keypad_key_width"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="@dimen/foundation_keypad_key_gap"
+            android:contentDescription="@string/foundation_keypad_digit_7"
+            android:text="7" />
+
+        <TextView
+            android:id="@+id/foundationKeypadKey8"
+            style="@style/Widget_Foundation_KeypadKey"
+            android:layout_width="@dimen/foundation_keypad_key_width"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="@dimen/foundation_keypad_key_gap"
+            android:contentDescription="@string/foundation_keypad_digit_8"
+            android:text="8" />
+
+        <TextView
+            android:id="@+id/foundationKeypadKey9"
+            style="@style/Widget_Foundation_KeypadKey"
+            android:layout_width="@dimen/foundation_keypad_key_width"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/foundation_keypad_digit_9"
+            android:text="9" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/foundationKeypadRow4"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/foundation_keypad_key_height"
+        android:layout_marginTop="@dimen/foundation_keypad_key_gap"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/foundationKeypadKey0"
+            style="@style/Widget_Foundation_KeypadKey"
+            android:layout_width="@dimen/foundation_keypad_zero_key_width"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="@dimen/foundation_keypad_key_gap"
+            android:contentDescription="@string/foundation_keypad_digit_0"
+            android:text="0" />
+
+        <TextView
+            android:id="@+id/foundationKeypadDelete"
+            style="@style/Widget_Foundation_KeypadKey"
+            android:layout_width="@dimen/foundation_keypad_key_width"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/foundation_keypad_delete"
+            android:text="@string/foundation_keypad_delete_symbol" />
+    </LinearLayout>
+</merge>

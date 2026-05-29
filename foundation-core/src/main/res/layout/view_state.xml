@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/stateRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="@dimen/foundation_space_xl">
+
+    <ImageView
+        android:id="@+id/stateIcon"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:src="@drawable/ic_foundation_state_empty" />
+
+    <TextView
+        android:id="@+id/stateTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/foundation_space_lg"
+        android:includeFontPadding="false"
+        android:textColor="@color/foundation_text_primary"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/stateDescription"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/foundation_space_sm"
+        android:includeFontPadding="false"
+        android:textColor="@color/foundation_text_muted"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/stateAction"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_marginTop="@dimen/foundation_space_lg"
+        android:background="@drawable/bg_foundation_button_primary"
+        android:gravity="center"
+        android:minWidth="96dp"
+        android:paddingStart="@dimen/foundation_space_lg"
+        android:paddingEnd="@dimen/foundation_space_lg"
+        android:textColor="@color/foundation_white"
+        android:textSize="14sp"
+        android:visibility="gone" />
+</LinearLayout>

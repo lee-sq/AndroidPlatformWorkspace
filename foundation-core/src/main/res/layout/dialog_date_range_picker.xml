@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/pickerRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_foundation_picker_sheet"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/foundation_picker_padding_horizontal"
+    android:paddingTop="@dimen/foundation_picker_padding_top"
+    android:paddingEnd="@dimen/foundation_picker_padding_horizontal"
+    android:paddingBottom="@dimen/foundation_picker_padding_bottom">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/foundation_picker_header_height">
+
+        <TextView
+            android:id="@+id/cancelButton"
+            style="@style/Widget_Foundation_PickerLinkAction"
+            android:layout_gravity="center_vertical|start"
+            android:text="@string/foundation_picker_cancel" />
+
+        <TextView
+            android:id="@+id/titleText"
+            style="@style/Widget_Foundation_PickerTitle"
+            android:layout_gravity="center"
+            android:text="@string/foundation_date_range_title" />
+
+        <TextView
+            android:id="@+id/confirmButton"
+            style="@style/Widget_Foundation_PickerLinkAction"
+            android:layout_gravity="center_vertical|end"
+            android:text="@string/foundation_picker_confirm" />
+    </FrameLayout>
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="@dimen/foundation_space_sm"
+        android:background="@color/foundation_border" />
+
+    <TextView
+        android:id="@+id/errorText"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/foundation_picker_error_height"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:text="@string/foundation_date_range_incomplete"
+        android:textSize="13sp"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/foundation_space_lg"
+        android:baselineAligned="false"
+        android:orientation="horizontal"
+        android:weightSum="2">
+
+        <LinearLayout
+            android:id="@+id/leftCalendarPanel"
+            style="@style/Widget_Foundation_CalendarMonthPanel"
+            android:paddingEnd="@dimen/foundation_calendar_month_gap">
+
+            <LinearLayout style="@style/Widget_Foundation_CalendarMonthToolbar">
+
+                <ImageView
+                    android:id="@+id/leftPrevYearButton"
+                    style="@style/Widget_Foundation_CalendarNavButton"
+                    android:contentDescription="@string/foundation_calendar_prev_year"
+                    android:src="@drawable/ic_foundation_calendar_double_left" />
+
+                <ImageView
+                    android:id="@+id/leftPrevMonthButton"
+                    style="@style/Widget_Foundation_CalendarNavButton"
+                    android:layout_marginStart="@dimen/foundation_calendar_nav_gap"
+                    android:contentDescription="@string/foundation_calendar_prev_month"
+                    android:src="@drawable/ic_foundation_calendar_left" />
+
+                <TextView
+                    android:id="@+id/leftMonthText"
+                    style="@style/Widget_Foundation_CalendarMonthTitle"
+                    tools:text="2026年05月" />
+
+                <ImageView
+                    android:id="@+id/leftNextMonthButton"
+                    style="@style/Widget_Foundation_CalendarNavButton"
+                    android:layout_marginEnd="@dimen/foundation_calendar_nav_gap"
+                    android:contentDescription="@string/foundation_calendar_next_month"
+                    android:src="@drawable/ic_foundation_calendar_right" />
+
+                <ImageView
+                    android:id="@+id/leftNextYearButton"
+                    style="@style/Widget_Foundation_CalendarNavButton"
+                    android:contentDescription="@string/foundation_calendar_next_year"
+                    android:src="@drawable/ic_foundation_calendar_double_right" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/leftWeekdayRow"
+                style="@style/Widget_Foundation_CalendarWeekdayRow">
+
+                <TextView
+                    style="@style/Widget_Foundation_CalendarWeekdayText"
+                    android:text="@string/foundation_calendar_monday" />
+
+                <TextView
+                    style="@style/Widget_Foundation_CalendarWeekdayText"
+                    android:text="@string/foundation_calendar_tuesday" />
+
+                <TextView
+                    style="@style/Widget_Foundation_CalendarWeekdayText"
+                    android:text="@string/foundation_calendar_wednesday" />
+
+                <TextView
+                    style="@style/Widget_Foundation_CalendarWeekdayText"
+                    android:text="@string/foundation_calendar_thursday" />
+
+                <TextView
+                    style="@style/Widget_Foundation_CalendarWeekdayText"
+                    android:text="@string/foundation_calendar_friday" />
+
+                <TextView
+                    style="@style/Widget_Foundation_CalendarWeekdayText"
+                    android:text="@string/foundation_calendar_saturday" />
+
+                <TextView
+                    style="@style/Widget_Foundation_CalendarWeekdayText"
+                    android:text="@string/foundation_calendar_sunday" />
+            </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/leftCalendarGrid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:overScrollMode="never"
+                tools:itemCount="42"
+                tools:listitem="@layout/item_calendar_date" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rightCalendarPanel"
+            style="@style/Widget_Foundation_CalendarMonthPanel"
+            android:paddingStart="@dimen/foundation_calendar_month_gap">
+
+            <LinearLayout style="@style/Widget_Foundation_CalendarMonthToolbar">
+
+                <ImageView
+                    android:id="@+id/rightPrevYearButton"
+                    style="@style/Widget_Foundation_CalendarNavButton"
+                    android:contentDescription="@string/foundation_calendar_prev_year"
+                    android:src="@drawable/ic_foundation_calendar_double_left" />
+
+                <ImageView
+                    android:id="@+id/rightPrevMonthButton"
+                    style="@style/Widget_Foundation_CalendarNavButton"
+                    android:layout_marginStart="@dimen/foundation_calendar_nav_gap"
+                    android:contentDescription="@string/foundation_calendar_prev_month"
+                    android:src="@drawable/ic_foundation_calendar_left" />
+
+                <TextView
+                    android:id="@+id/rightMonthText"
+                    style="@style/Widget_Foundation_CalendarMonthTitle"
+                    tools:text="2026年06月" />
+
+                <ImageView
+                    android:id="@+id/rightNextMonthButton"
+                    style="@style/Widget_Foundation_CalendarNavButton"
+                    android:layout_marginEnd="@dimen/foundation_calendar_nav_gap"
+                    android:contentDescription="@string/foundation_calendar_next_month"
+                    android:src="@drawable/ic_foundation_calendar_right" />
+
+                <ImageView
+                    android:id="@+id/rightNextYearButton"
+                    style="@style/Widget_Foundation_CalendarNavButton"
+                    android:contentDescription="@string/foundation_calendar_next_year"
+                    android:src="@drawable/ic_foundation_calendar_double_right" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/rightWeekdayRow"
+                style="@style/Widget_Foundation_CalendarWeekdayRow">
+
+                <TextView
+                    style="@style/Widget_Foundation_CalendarWeekdayText"
+                    android:text="@string/foundation_calendar_monday" />
+
+                <TextView
+                    style="@style/Widget_Foundation_CalendarWeekdayText"
+                    android:text="@string/foundation_calendar_tuesday" />
+
+                <TextView
+                    style="@style/Widget_Foundation_CalendarWeekdayText"
+                    android:text="@string/foundation_calendar_wednesday" />
+
+                <TextView
+                    style="@style/Widget_Foundation_CalendarWeekdayText"
+                    android:text="@string/foundation_calendar_thursday" />
+
+                <TextView
+                    style="@style/Widget_Foundation_CalendarWeekdayText"
+                    android:text="@string/foundation_calendar_friday" />
+
+                <TextView
+                    style="@style/Widget_Foundation_CalendarWeekdayText"
+                    android:text="@string/foundation_calendar_saturday" />
+
+                <TextView
+                    style="@style/Widget_Foundation_CalendarWeekdayText"
+                    android:text="@string/foundation_calendar_sunday" />
+            </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rightCalendarGrid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:overScrollMode="never"
+                tools:itemCount="42"
+                tools:listitem="@layout/item_calendar_date" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
