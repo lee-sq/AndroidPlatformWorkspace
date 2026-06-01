@@ -60,6 +60,7 @@ dependencies {
     api(libs.github.logbook) {
         exclude(group = "com.google.code.gson", module = "gson")
     }
+    implementation(libs.github.voice)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
