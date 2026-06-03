@@ -30,6 +30,16 @@ android {
         buildConfig = false
     }
 
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android.txt"),
+                "proguard-rules.pro",
+            )
+        }
+    }
+
     packaging {
         jniLibs {
             useLegacyPackaging = true

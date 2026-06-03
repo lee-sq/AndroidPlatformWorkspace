@@ -128,3 +128,14 @@ deviceManager.registerDriver(VendorCabinetDriver())
 
 - `weigh()`：业务动作前主动读取一次。
 - `observeWeight()`：业务 UI 实时展示时 collect，主动上报型设备直接转发帧，被动响应型设备由 driver 内部轮询。
+
+## ProGuard / R8
+
+所有 `device` Android library 的 `release` 产物默认开启 R8 混淆，并通过 `consumer-rules.pro` 向业务 App 自动传递必要规则。业务方正常只需要依赖对应 AAR/Maven 坐标，不需要重复维护 device 的 keep 规则。
+
+- `device-api-*` 保留对外 API 的类名和 public/protected 成员，保证业务代码、能力接口和数据模型的调用边界稳定。
+- `device-core` 保留运行时入口和 `android_serialport_api.SerialPort`。其中 `SerialPort` 必须完整 keep，因为 `libserial_port.so` 写死了 JNI 符号。
+- `device-driver-*` 保留可手动注册的 `*Driver` 入口、公开成员，以及公开签名里出现的类型；其余内部协议解析、探测、设备实现仍允许 R8 混淆。
+- `device-starter-*` 保留显式初始化入口，推荐业务方通过 Starter 注册对应领域驱动。
+
+后续如果某个 driver 引入厂商 AAR、反射创建、JSON 序列化、ServiceLoader 或新的 JNI/native so，应把对应 keep / dontwarn 规则放进该 driver module 的 `consumer-rules.pro`，让业务方自动继承。
