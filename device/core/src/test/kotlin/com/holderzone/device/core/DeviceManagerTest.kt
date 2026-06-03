@@ -2,6 +2,8 @@ package com.holderzone.device.core
 
 import com.holderzone.device.api.base.channel.SerialChannel
 import com.holderzone.device.api.base.device.IDevice
+import com.holderzone.device.api.base.logging.DeviceLogEntry
+import com.holderzone.device.api.base.logging.DeviceLogLevel
 import com.holderzone.device.api.base.model.CommunicationMode
 import com.holderzone.device.api.base.model.ConnectionState
 import com.holderzone.device.api.base.model.DeviceCategory
@@ -31,8 +33,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -109,6 +113,92 @@ class DeviceManagerTest {
         assertEquals(ConnectionState.CONNECTED, (events[1] as DeviceConnectionEvent.StateChanged).previousState)
         assertEquals(ConnectionState.DEGRADED, (events[1] as DeviceConnectionEvent.StateChanged).state)
         assertEquals(device.info.deviceId, (events[2] as DeviceConnectionEvent.Unbound).deviceId)
+
+        collectJob.cancel()
+    }
+
+    @Test
+    fun logsOnlyPublishEntriesAtOrAboveMinimumLevel() = runTest {
+        val manager = DeviceManager()
+        val logs = mutableListOf<DeviceLogEntry>()
+        val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
+            manager.logs.collect(logs::add)
+        }
+
+        manager.emitLog(
+            level = DeviceLogLevel.INFO,
+            tag = "DeviceTest",
+            message = "filtered",
+        )
+        manager.emitLog(
+            level = DeviceLogLevel.WARN,
+            tag = "DeviceTest",
+            message = "published",
+        )
+
+        assertEquals(1, logs.size)
+        assertEquals(DeviceLogLevel.WARN, logs.single().level)
+        assertEquals("published", logs.single().message)
+
+        collectJob.cancel()
+    }
+
+    @Test
+    fun logListenersReceiveEntriesAndCanBeRemoved() {
+        val manager = DeviceManager()
+        val logs = mutableListOf<DeviceLogEntry>()
+        val closeable = manager.addLogListener { entry ->
+            logs += entry
+        }
+
+        manager.emitLog(
+            level = DeviceLogLevel.ERROR,
+            tag = "DeviceTest",
+            message = "first",
+        )
+        closeable.close()
+        manager.emitLog(
+            level = DeviceLogLevel.ERROR,
+            tag = "DeviceTest",
+            message = "second",
+        )
+
+        assertEquals(1, logs.size)
+        assertEquals("first", logs.single().message)
+    }
+
+    @Test
+    fun throwingLogListenerDoesNotBlockOtherListeners() {
+        val manager = DeviceManager()
+        var healthyListenerCalled = false
+        manager.addLogListener {
+            error("Listener failed.")
+        }
+        manager.addLogListener {
+            healthyListenerCalled = true
+        }
+
+        manager.emitLog(
+            level = DeviceLogLevel.ERROR,
+            tag = "DeviceTest",
+            message = "safe dispatch",
+        )
+
+        assertTrue(healthyListenerCalled)
+    }
+
+    @Test
+    fun defaultMinimumLevelFiltersInfoLifecycleLogs() = runTest {
+        val manager = DeviceManager()
+        val driver = FakeScaleDriver()
+        val logs = mutableListOf<DeviceLogEntry>()
+        val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
+            manager.logs.collect(logs::add)
+        }
+
+        manager.bindDevice(driver, fakeChannel())
+
+        assertFalse(logs.any { it.level == DeviceLogLevel.INFO })
 
         collectJob.cancel()
     }

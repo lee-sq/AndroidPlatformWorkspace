@@ -11,6 +11,8 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.Spinner
 import android.widget.TextView
+import com.holderzone.device.api.base.logging.DeviceLogEntry
+import com.holderzone.device.api.base.logging.DeviceLogLevel
 import com.holderzone.device.api.base.model.ConnectionState
 import com.holderzone.device.api.base.model.SerialConfig
 import com.holderzone.device.api.scale.capability.IWeighable
@@ -41,6 +43,7 @@ class MainActivity : Activity() {
     private val serialPortManager = SerialPortManager()
     private val driver = JWScaleDriver()
     private val timeFormat = SimpleDateFormat("HH:mm:ss.SSS", Locale.CHINA)
+    private val defaultPortPath = JWScaleDriver.DEFAULT_PORT_PATH.firstOrNull() ?: FALLBACK_PORT_PATH
 
     private lateinit var statusText: TextView
     private lateinit var portText: TextView
@@ -51,7 +54,7 @@ class MainActivity : Activity() {
     private lateinit var portSpinner: Spinner
     private lateinit var portAdapter: ArrayAdapter<String>
 
-    private var selectedPort: String = JWScaleDriver.DEFAULT_PORT_PATH
+    private var selectedPort: String = defaultPortPath
     private var weightJob: Job? = null
     private var currentDeviceId: String? = null
 
@@ -59,10 +62,11 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         ScaleStarterInitializer.init(deviceManager)
         setContentView(buildContentView())
+        observeDeviceLogs()
         observeGlobalState()
         observeDevices()
         refreshPorts()
-        appendLog("测试程序已启动，默认串口：${JWScaleDriver.DEFAULT_PORT_PATH}")
+        appendLog("测试程序已启动，默认串口：$defaultPortPath")
     }
 
     override fun onDestroy() {
@@ -118,7 +122,7 @@ class MainActivity : Activity() {
                     position: Int,
                     id: Long
                 ) {
-                    selectedPort = portAdapter.getItem(position) ?: JWScaleDriver.DEFAULT_PORT_PATH
+                    selectedPort = portAdapter.getItem(position) ?: defaultPortPath
                     portText.text = "串口：$selectedPort"
                 }
 
@@ -136,9 +140,9 @@ class MainActivity : Activity() {
         root.addView(
             buttonRow(
                 button("绑定所选串口") { bindSelectedPort() },
-                button("绑定 /dev/ttyS7") {
-                    selectedPort = JWScaleDriver.DEFAULT_PORT_PATH
-                    bindPort(JWScaleDriver.DEFAULT_PORT_PATH)
+                button("绑定 $defaultPortPath") {
+                    selectedPort = defaultPortPath
+                    bindPort(defaultPortPath)
                 },
             )
         )
@@ -181,12 +185,21 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun observeDeviceLogs() {
+        deviceManager.minLogLevel = DeviceLogLevel.INFO
+        scope.launch {
+            deviceManager.logs.collectLatest { entry ->
+                appendLog(entry.toDisplayText())
+            }
+        }
+    }
+
     private fun refreshPorts() {
         scope.launch {
             runCatching {
                 withContext(Dispatchers.IO) { serialPortManager.listPorts().map { it.path } }
             }.onSuccess { ports ->
-                val items = (listOf(JWScaleDriver.DEFAULT_PORT_PATH) + ports).distinct()
+                val items: List<String> = (listOf(defaultPortPath) + ports).distinct()
                 portAdapter.clear()
                 portAdapter.addAll(items)
                 portAdapter.notifyDataSetChanged()
@@ -389,7 +402,28 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun DeviceLogEntry.toDisplayText(): String {
+        val details = listOfNotNull(
+            deviceId?.let { "设备=$it" },
+            strategyId?.let { "策略=$it" },
+            portPath?.let { "端口=$it" },
+            throwable?.message?.let { "异常=$it" },
+        ).joinToString("，")
+        val suffix = if (details.isBlank()) "" else "（$details）"
+        return "设备日志[${level.toChineseText()}][$tag] $message$suffix"
+    }
+
+    private fun DeviceLogLevel.toChineseText(): String {
+        return when (this) {
+            DeviceLogLevel.DEBUG -> "调试"
+            DeviceLogLevel.INFO -> "信息"
+            DeviceLogLevel.WARN -> "警告"
+            DeviceLogLevel.ERROR -> "错误"
+        }
+    }
+
     private companion object {
         const val MAX_LOG_CHARS = 12_000
+        const val FALLBACK_PORT_PATH = "/dev/ttyS7"
     }
 }

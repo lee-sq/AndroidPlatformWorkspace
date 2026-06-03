@@ -2,6 +2,7 @@ package com.holderzone.device.core.device
 
 import com.holderzone.device.api.base.channel.SerialChannel
 import com.holderzone.device.api.base.device.IDevice
+import com.holderzone.device.api.base.logging.DeviceLogLevel
 import com.holderzone.device.api.base.model.CommunicationMode
 import com.holderzone.device.api.base.model.ConnectionState
 import com.holderzone.device.api.base.strategy.IDeviceDriver
@@ -14,6 +15,7 @@ import com.holderzone.device.core.watchdog.WatchdogPolicy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 
@@ -31,6 +33,7 @@ class DeviceRuntime(
 ) {
     /** 已绑定设备的运行会话，key 为 deviceId，便于按设备关闭和重连。 */
     private val sessions = mutableMapOf<String, DeviceSession>()
+    private val reconnectJobs = mutableMapOf<String, Job>()
     private var sniffJob: Job? = null
 
     val isSniffing: Boolean
@@ -41,10 +44,34 @@ class DeviceRuntime(
         if (isSniffing) return
 
         sniffJob = scope.launch {
+            deviceManager.emitLog(
+                level = DeviceLogLevel.INFO,
+                tag = TAG,
+                message = "开始自动探测设备。",
+            )
             deviceManager.markGlobalState(ConnectionState.SNIFFING)
-            when (val result = autoSniffer.sniffOnce()) {
-                is SniffResult.Matched -> bindMatched(result)
-                SniffResult.NoMatch -> deviceManager.markGlobalState(ConnectionState.DISCONNECTED)
+            while (isActive) {
+                when (val result = autoSniffer.sniffOnce()) {
+                    is SniffResult.Matched -> {
+                        deviceManager.emitLog(
+                            level = DeviceLogLevel.INFO,
+                            tag = TAG,
+                            message = "自动探测命中设备：${result.driver.descriptor.strategyId}，端口：${result.channel.portPath}。",
+                            strategyId = result.driver.descriptor.strategyId,
+                            portPath = result.channel.portPath,
+                        )
+                        bindMatched(result)
+                        return@launch
+                    }
+                    SniffResult.NoMatch -> {
+                        deviceManager.emitLog(
+                            level = DeviceLogLevel.INFO,
+                            tag = TAG,
+                            message = "本轮自动探测未匹配到设备，等待后继续扫描。",
+                        )
+                        delay(SNIFF_RETRY_DELAY_MS)
+                    }
+                }
             }
         }
     }
@@ -80,7 +107,16 @@ class DeviceRuntime(
                 }
                 frames.forEach(driver.frameParser::parseFrame)
             },
-            onError = {
+            onError = { throwable ->
+                deviceManager.emitLog(
+                    level = DeviceLogLevel.ERROR,
+                    tag = TAG,
+                    message = "设备读循环异常：${device.info.deviceId}",
+                    deviceId = device.info.deviceId,
+                    strategyId = driver.descriptor.strategyId,
+                    portPath = channel.portPath,
+                    throwable = throwable,
+                )
                 deviceManager.updateState(device.info.deviceId, ConnectionState.DEGRADED)
                 scheduleReconnect(device.info.deviceId)
             },
@@ -103,6 +139,7 @@ class DeviceRuntime(
 
     fun stopDevice(deviceId: String) {
         scope.launch {
+            reconnectJobs.remove(deviceId)?.cancel()
             sessions.remove(deviceId)?.close()
             deviceManager.unbindDevice(deviceId)
         }
@@ -117,6 +154,8 @@ class DeviceRuntime(
     /** 同步停止所有运行会话，常用于 clear 或测试环境中的资源释放。 */
     suspend fun stopAllNow() {
         stopAutoSniffing()
+        reconnectJobs.values.forEach { job -> job.cancel() }
+        reconnectJobs.clear()
         sessions.values.map { session ->
             scope.launch {
                 session.close()
@@ -132,6 +171,14 @@ class DeviceRuntime(
                 val session = sessions[deviceId] ?: return@launch
                 if (session.watchdog.isTimeout()) {
                     // 超过策略时间没有收到合法帧，先降级，再关闭旧会话并重新扫描。
+                    deviceManager.emitLog(
+                        level = DeviceLogLevel.WARN,
+                        tag = TAG,
+                        message = "设备看门狗超时：$deviceId",
+                        deviceId = deviceId,
+                        strategyId = session.driver.descriptor.strategyId,
+                        portPath = session.channel.portPath,
+                    )
                     deviceManager.updateState(deviceId, ConnectionState.DEGRADED)
                     scheduleReconnect(deviceId)
                     return@launch
@@ -142,12 +189,23 @@ class DeviceRuntime(
 
     /** 关闭异常会话，标记 RECONNECTING，延迟后解绑并重新进入自动探测。 */
     private fun scheduleReconnect(deviceId: String) {
-        scope.launch {
+        if (reconnectJobs[deviceId]?.isActive == true) return
+
+        reconnectJobs[deviceId] = scope.launch {
             val session = sessions.remove(deviceId) ?: return@launch
+            deviceManager.emitLog(
+                level = DeviceLogLevel.WARN,
+                tag = TAG,
+                message = "设备已安排重连：$deviceId",
+                deviceId = deviceId,
+                strategyId = session.driver.descriptor.strategyId,
+                portPath = session.channel.portPath,
+            )
             session.close()
             deviceManager.updateState(deviceId, ConnectionState.RECONNECTING)
             delay(reconnectDelayMs)
             deviceManager.unbindDevice(deviceId)
+            reconnectJobs.remove(deviceId)
             startAutoSniffing()
         }
     }
@@ -171,5 +229,7 @@ class DeviceRuntime(
 
     companion object {
         const val DEFAULT_RECONNECT_DELAY_MS: Long = 1_000L
+        private const val SNIFF_RETRY_DELAY_MS = 1_000L
+        private const val TAG = "DeviceRuntime"
     }
 }

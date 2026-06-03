@@ -2,6 +2,9 @@ package com.holderzone.device.core.device
 
 import com.holderzone.device.api.base.channel.SerialChannel
 import com.holderzone.device.api.base.device.IDevice
+import com.holderzone.device.api.base.logging.DeviceLogEntry
+import com.holderzone.device.api.base.logging.DeviceLogLevel
+import com.holderzone.device.api.base.logging.DeviceLogListener
 import com.holderzone.device.api.base.model.ConnectionState
 import com.holderzone.device.api.base.strategy.IDeviceDriver
 import com.holderzone.device.core.capability.CapabilityAggregator
@@ -9,6 +12,8 @@ import com.holderzone.device.core.channel.SerialPortManager
 import com.holderzone.device.core.sniffer.AutoSniffer
 import com.holderzone.device.core.strategy.StrategyRegistry
 import com.holderzone.device.core.watchdog.WatchdogPolicy
+import java.io.Closeable
+import java.util.concurrent.CopyOnWriteArraySet
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -40,6 +45,10 @@ class DeviceManager(
     private val connectionEventsFlow = MutableSharedFlow<DeviceConnectionEvent>(
         extraBufferCapacity = CONNECTION_EVENT_BUFFER_CAPACITY,
     )
+    private val logsFlow = MutableSharedFlow<DeviceLogEntry>(
+        extraBufferCapacity = LOG_EVENT_BUFFER_CAPACITY,
+    )
+    private val logListeners = CopyOnWriteArraySet<DeviceLogListener>()
     private val runtime = DeviceRuntime(
         deviceManager = this,
         autoSniffer = AutoSniffer(
@@ -67,6 +76,11 @@ class DeviceManager(
 
     val connectionEvents: SharedFlow<DeviceConnectionEvent>
         get() = connectionEventsFlow.asSharedFlow()
+
+    val logs: SharedFlow<DeviceLogEntry>
+        get() = logsFlow.asSharedFlow()
+
+    var minLogLevel: DeviceLogLevel = DeviceLogLevel.WARN
 
     /** 注册一个驱动策略，后续自动探测会按 priority 和 strategyId 排序尝试。 */
     fun registerDriver(driver: IDeviceDriver) {
@@ -103,6 +117,14 @@ class DeviceManager(
         if (record != null) {
             publishConnectionEvent(DeviceConnectionEvent.Bound(record))
         }
+        emitLog(
+            level = DeviceLogLevel.INFO,
+            tag = TAG,
+            message = "设备已绑定：${device.info.deviceId}",
+            deviceId = device.info.deviceId,
+            strategyId = driver.descriptor.strategyId,
+            portPath = channel.portPath,
+        )
         return device
     }
 
@@ -146,6 +168,13 @@ class DeviceManager(
         }.value = ConnectionState.DISCONNECTED
         publishDevices()
         publishConnectionEvent(DeviceConnectionEvent.Unbound(deviceId, record))
+        emitLog(
+            level = DeviceLogLevel.INFO,
+            tag = TAG,
+            message = "设备已解绑：$deviceId",
+            deviceId = deviceId,
+            strategyId = record.driver.descriptor.strategyId,
+        )
     }
 
     fun observeDevice(deviceId: String): StateFlow<ConnectionState> {
@@ -171,6 +200,7 @@ class DeviceManager(
                     record = deviceRegistry.find(deviceId),
                 ),
             )
+            emitStateLog(deviceId = deviceId, previousState = previousState, state = state)
         }
     }
 
@@ -188,6 +218,48 @@ class DeviceManager(
         globalStateFlow.value = ConnectionState.DISCONNECTED
         publishDevices()
         publishConnectionEvent(DeviceConnectionEvent.Cleared)
+        emitLog(
+            level = DeviceLogLevel.INFO,
+            tag = TAG,
+            message = "设备管理器已清空。",
+        )
+    }
+
+    fun addLogListener(listener: DeviceLogListener): Closeable {
+        logListeners += listener
+        return Closeable { removeLogListener(listener) }
+    }
+
+    fun removeLogListener(listener: DeviceLogListener) {
+        logListeners -= listener
+    }
+
+    internal fun emitLog(
+        level: DeviceLogLevel,
+        tag: String,
+        message: String,
+        deviceId: String? = null,
+        strategyId: String? = null,
+        portPath: String? = null,
+        throwable: Throwable? = null,
+    ) {
+        if (!level.isAtLeast(minLogLevel)) return
+
+        val entry = DeviceLogEntry(
+            level = level,
+            tag = tag,
+            message = message,
+            deviceId = deviceId,
+            strategyId = strategyId,
+            portPath = portPath,
+            throwable = throwable,
+        )
+        logsFlow.tryEmit(entry)
+        logListeners.forEach { listener ->
+            runCatching {
+                listener.onLog(entry)
+            }
+        }
     }
 
     private fun publishDevices() {
@@ -200,8 +272,26 @@ class DeviceManager(
         connectionEventsFlow.tryEmit(event)
     }
 
+    private fun emitStateLog(deviceId: String, previousState: ConnectionState?, state: ConnectionState) {
+        val level = when (state) {
+            ConnectionState.DEGRADED,
+            ConnectionState.RECONNECTING,
+            -> DeviceLogLevel.WARN
+            else -> DeviceLogLevel.INFO
+        }
+        emitLog(
+            level = level,
+            tag = TAG,
+            message = "设备状态变更：$deviceId，${previousState ?: "-"} -> $state",
+            deviceId = deviceId,
+            strategyId = deviceRegistry.find(deviceId)?.driver?.descriptor?.strategyId,
+        )
+    }
+
     companion object {
         private const val CONNECTION_EVENT_BUFFER_CAPACITY = 64
+        private const val LOG_EVENT_BUFFER_CAPACITY = 128
+        private const val TAG = "DeviceManager"
 
         private val shared = DeviceManager()
 

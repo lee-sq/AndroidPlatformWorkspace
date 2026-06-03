@@ -26,4 +26,6 @@ data class DriverDescriptor(
     val capabilities: Set<KClass<*>>,
     /** 探测优先级，数值越小越先尝试。 */
     val priority: Int = 100,
+    /** 单个候选串口的探测观察窗口；不配置时由通信模式决定默认值。 */
+    val probeTimeoutMs: Long? = null,
 )

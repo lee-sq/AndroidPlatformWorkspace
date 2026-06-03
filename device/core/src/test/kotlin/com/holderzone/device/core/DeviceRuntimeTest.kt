@@ -2,6 +2,8 @@ package com.holderzone.device.core
 
 import com.holderzone.device.api.base.channel.SerialChannel
 import com.holderzone.device.api.base.device.IDevice
+import com.holderzone.device.api.base.logging.DeviceLogEntry
+import com.holderzone.device.api.base.logging.DeviceLogLevel
 import com.holderzone.device.api.base.model.CommunicationMode
 import com.holderzone.device.api.base.model.ConnectionState
 import com.holderzone.device.api.base.model.DeviceCategory
@@ -29,8 +31,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.runCurrent
@@ -69,7 +74,7 @@ class DeviceRuntimeTest {
         )
         val manager = DeviceManager(
             serialPortManager = SerialPortManager(backend),
-            coroutineScope = TestScope(dispatcher),
+            coroutineScope = this,
         )
         manager.registerDriver(RuntimeTestDriver())
 
@@ -80,7 +85,7 @@ class DeviceRuntimeTest {
         assertEquals(ConnectionState.CONNECTED, manager.observeDevice(deviceId).value)
         assertNotNull(manager.queryCapability<IWeighable>(deviceId))
         manager.clear()
-        runCurrent()
+        advanceUntilIdle()
     }
 
     @Test
@@ -102,7 +107,7 @@ class DeviceRuntimeTest {
         )
         val manager = DeviceManager(
             serialPortManager = SerialPortManager(backend),
-            coroutineScope = TestScope(dispatcher),
+            coroutineScope = this,
         )
         manager.registerDriver(RuntimeTestDriver(preferredPortPaths = listOf("/dev/ttyS7")))
 
@@ -111,7 +116,127 @@ class DeviceRuntimeTest {
 
         assertEquals("/dev/ttyS7", openedPorts.first())
         manager.clear()
+        advanceUntilIdle()
+    }
+
+    @Test
+    fun startAutoSniffingPublishesLifecycleLogsWhenInfoIsEnabled() = runTest(dispatcher) {
+        val backend = InMemorySerialBackend(
+            ports = listOf(SerialPortInfo(path = "/dev/ttyS0")),
+            channelFactory = { portPath, config ->
+                InMemorySerialChannel(
+                    portPath = portPath,
+                    config = config,
+                    readBuffer = ArrayDeque(listOf("MATCH".encodeToByteArray())),
+                )
+            },
+        )
+        val manager = DeviceManager(
+            serialPortManager = SerialPortManager(backend),
+            coroutineScope = this,
+        )
+        val logs = mutableListOf<DeviceLogEntry>()
+        val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
+            manager.logs.collect(logs::add)
+        }
+        manager.minLogLevel = DeviceLogLevel.INFO
+        manager.registerDriver(RuntimeTestDriver())
+
+        manager.startAutoSniffing()
         runCurrent()
+
+        assertEquals(
+            listOf(
+                "开始自动探测设备。",
+                "自动探测命中设备：${RuntimeTestDriver.STRATEGY_ID}，端口：/dev/ttyS0。",
+                "设备已绑定：${RuntimeTestDriver.STRATEGY_ID}:/dev/ttyS0",
+            ),
+            logs.map { it.message },
+        )
+
+        collectJob.cancel()
+        manager.clear()
+        advanceUntilIdle()
+    }
+
+    @Test
+    fun startAutoSniffingWaitsForDelayedActiveReportWithinProbeWindow() = runTest(dispatcher) {
+        val backend = InMemorySerialBackend(
+            ports = listOf(SerialPortInfo(path = "/dev/ttyS0")),
+            channelFactory = { portPath, config ->
+                InMemorySerialChannel(
+                    portPath = portPath,
+                    config = config,
+                    readBuffer = ArrayDeque(
+                        listOf(
+                            ByteArray(0),
+                            ByteArray(0),
+                            "MATCH".encodeToByteArray(),
+                        ),
+                    ),
+                )
+            },
+        )
+        val manager = DeviceManager(
+            serialPortManager = SerialPortManager(backend),
+            coroutineScope = this,
+        )
+        manager.registerDriver(
+            RuntimeTestDriver(
+                communicationMode = CommunicationMode.ACTIVE_REPORT,
+                probeTimeoutMs = 300L,
+            ),
+        )
+
+        try {
+            manager.startAutoSniffing()
+            advanceTimeBy(25L)
+            runCurrent()
+
+            val deviceId = "${RuntimeTestDriver.STRATEGY_ID}:/dev/ttyS0"
+            assertEquals(ConnectionState.CONNECTED, manager.observeDevice(deviceId).value)
+        } finally {
+            manager.clear()
+            advanceUntilIdle()
+        }
+    }
+
+    @Test
+    fun readLoopFailurePublishesErrorAndWarnLogsWithDefaultMinimumLevel() = runTest(dispatcher) {
+        val manager = DeviceManager(
+            coroutineScope = this,
+        )
+        val logs = mutableListOf<DeviceLogEntry>()
+        val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
+            manager.logs.collect(logs::add)
+        }
+        val channel = FailingReadSerialChannel(
+            portPath = "/dev/ttyS0",
+            config = SerialConfig(baudRate = 9_600),
+        )
+
+        val device = manager.bindDeviceSession(RuntimeTestDriver(), channel)
+        runCurrent()
+
+        assertEquals(ConnectionState.RECONNECTING, manager.observeDevice(device.info.deviceId).value)
+        assertEquals(
+            listOf(DeviceLogLevel.ERROR, DeviceLogLevel.WARN, DeviceLogLevel.WARN, DeviceLogLevel.WARN),
+            logs.map { it.level },
+        )
+        assertEquals(
+            listOf(
+                "设备读循环异常：${device.info.deviceId}",
+                "设备状态变更：${device.info.deviceId}，CONNECTED -> DEGRADED",
+                "设备已安排重连：${device.info.deviceId}",
+                "设备状态变更：${device.info.deviceId}，DEGRADED -> RECONNECTING",
+            ),
+            logs.map { it.message },
+        )
+        assertEquals("Read failed.", logs.first().throwable?.message)
+
+        collectJob.cancel()
+        manager.clear()
+        advanceUntilIdle()
     }
 
     @Test
@@ -130,6 +255,8 @@ class DeviceRuntimeTest {
 
     private class RuntimeTestDriver(
         private val preferredPortPaths: List<String> = emptyList(),
+        private val communicationMode: CommunicationMode = CommunicationMode.PASSIVE_RESPONSE,
+        private val probeTimeoutMs: Long? = null,
     ) : IDeviceDriver {
         val parser = RuntimeFrameParser()
 
@@ -138,9 +265,10 @@ class DeviceRuntimeTest {
             vendorName = "HolderZone",
             deviceModel = "RuntimeTest",
             deviceCategory = DeviceCategory.SCALE,
-            communicationMode = CommunicationMode.PASSIVE_RESPONSE,
+            communicationMode = communicationMode,
             supportedConfigs = listOf(SerialConfig(baudRate = 9_600)),
             preferredPortPaths = preferredPortPaths,
+            probeTimeoutMs = probeTimeoutMs,
             capabilities = setOf(IWeighable::class),
         )
 
@@ -215,5 +343,27 @@ class DeviceRuntimeTest {
         override suspend fun tare() = Unit
 
         override suspend fun zero() = Unit
+    }
+
+    private class FailingReadSerialChannel(
+        override val portPath: String,
+        override val config: SerialConfig,
+    ) : SerialChannel {
+        override var isOpen: Boolean = false
+            private set
+
+        override suspend fun open() {
+            isOpen = true
+        }
+
+        override suspend fun close() {
+            isOpen = false
+        }
+
+        override suspend fun write(data: ByteArray) = Unit
+
+        override suspend fun read(timeoutMs: Long): ByteArray {
+            error("Read failed.")
+        }
     }
 }
