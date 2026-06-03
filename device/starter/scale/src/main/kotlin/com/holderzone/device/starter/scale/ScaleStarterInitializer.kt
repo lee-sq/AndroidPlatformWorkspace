@@ -2,6 +2,7 @@ package com.holderzone.device.starter.scale
 
 import com.holderzone.device.core.device.DeviceManager
 import com.holderzone.device.driver.scale.jw.JWScaleDriver
+import com.holderzone.device.driver.scale.ly.LyScaleDriver
 
 /**
  * Auth：ligen26
@@ -11,5 +12,6 @@ import com.holderzone.device.driver.scale.jw.JWScaleDriver
 object ScaleStarterInitializer {
     fun init(deviceManager: DeviceManager) {
         deviceManager.registerDriver(JWScaleDriver())
+        deviceManager.registerDriver(LyScaleDriver())
     }
 }

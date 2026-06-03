@@ -8,5 +8,6 @@ package com.holderzone.device.driver.scale.constant
 object VendorName {
 
     val JW = "精卫"
+    val LY = "亮悦"
 
 }

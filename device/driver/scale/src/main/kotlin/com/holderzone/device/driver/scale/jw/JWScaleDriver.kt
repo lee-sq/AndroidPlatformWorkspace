@@ -35,7 +35,7 @@ class JWScaleDriver(
         deviceCategory = DeviceCategory.SCALE,
         communicationMode = CommunicationMode.ACTIVE_REPORT,
         supportedConfigs = listOf(SerialConfig(baudRate = DEFAULT_BAUD_RATE)),
-        preferredPortPaths = listOf(DEFAULT_PORT_PATH),
+        preferredPortPaths = DEFAULT_PORT_PATH,
         capabilities = setOf(IWeighable::class),
         priority = 10,
     )
@@ -52,9 +52,9 @@ class JWScaleDriver(
     )
 
     companion object {
-        const val STRATEGY_ID = "scale.jingwei.3568"
-        const val DEVICE_MODEL = "JW-3568"
-        const val DEFAULT_PORT_PATH = "/dev/ttyS7"
+        const val STRATEGY_ID = "scale.jingwei"
+        const val DEVICE_MODEL = "JW"
+        val DEFAULT_PORT_PATH = listOf("/dev/ttyS7", "/dev/ttyS2")
         const val DEFAULT_BAUD_RATE = 19_200
     }
 }

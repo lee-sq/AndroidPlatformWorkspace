@@ -47,4 +47,6 @@ dependencies {
     api(project(":device-api-scale"))
     api(project(":device-core"))
     api(project(":device-driver-scale"))
+
+    testImplementation(libs.junit)
 }
