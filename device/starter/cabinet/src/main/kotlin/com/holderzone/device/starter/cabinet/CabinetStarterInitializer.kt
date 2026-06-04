@@ -1,8 +1,9 @@
 package com.holderzone.device.starter.cabinet
 
+import android.content.Context
 import com.holderzone.device.core.device.DeviceManager
-import com.holderzone.device.driver.cabinet.x.CabinetXDriver
-import com.holderzone.device.driver.cabinet.y.CabinetYDriver
+import com.holderzone.device.driver.cabinet.jw.serial.JwSerialCabinetDriver
+import com.holderzone.device.driver.cabinet.star.StarCabinetDriver
 
 /**
  * Auth：ligen26
@@ -11,7 +12,11 @@ import com.holderzone.device.driver.cabinet.y.CabinetYDriver
  */
 object CabinetStarterInitializer {
     fun init(deviceManager: DeviceManager) {
-        deviceManager.registerDriver(CabinetXDriver())
-        deviceManager.registerDriver(CabinetYDriver())
+        deviceManager.registerDriver(JwSerialCabinetDriver())
+    }
+
+    fun init(deviceManager: DeviceManager, context: Context) {
+        deviceManager.registerDriver(JwSerialCabinetDriver(context.applicationContext))
+        deviceManager.registerDriver(StarCabinetDriver(context.applicationContext))
     }
 }

@@ -8,4 +8,6 @@ package com.holderzone.device.api.cabinet.model
 data class PrintContent(
     val title: String,
     val lines: List<String> = emptyList(),
+    val widthMm: Int? = null,
+    val heightMm: Int? = null,
 )

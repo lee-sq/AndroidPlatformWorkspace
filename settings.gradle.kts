@@ -44,3 +44,6 @@ project(":device-starter-cabinet").projectDir = file("device/starter/cabinet")
 
 include(":device-test-app")
 project(":device-test-app").projectDir = file("device/test-app")
+
+include(":device-cabinet-test-app")
+project(":device-cabinet-test-app").projectDir = file("device/cabinet-test-app")

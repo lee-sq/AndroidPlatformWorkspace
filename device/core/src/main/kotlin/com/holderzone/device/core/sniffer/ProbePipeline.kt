@@ -4,6 +4,7 @@ import com.holderzone.device.api.base.channel.SerialChannel
 import com.holderzone.device.api.base.model.CommunicationMode
 import com.holderzone.device.api.base.model.ProbeResult
 import com.holderzone.device.api.base.strategy.IDeviceDriver
+import com.holderzone.device.api.base.strategy.ISelfManagedProbeStrategy
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -20,11 +21,20 @@ class ProbePipeline {
             if (!channel.isOpen) {
                 channel.open()
             }
+            val settleDelayMs = driver.descriptor.probeSettleDelayMs
+            if (settleDelayMs > 0L) {
+                delay(settleDelayMs)
+            }
             val probeFrame = driver.probeStrategy.buildProbeFrame()
             channel.write(probeFrame)
 
             val timeoutMs = driver.descriptor.probeTimeoutMs
                 ?: driver.descriptor.communicationMode.defaultProbeTimeoutMs()
+            if (driver.descriptor.selfManagedConnection) {
+                val selfManagedProbe = driver.probeStrategy as? ISelfManagedProbeStrategy
+                return selfManagedProbe?.validateChannel(channel)
+                    ?: driver.probeStrategy.validateResponse(ByteArray(0))
+            }
             val attempts = probeAttempts(timeoutMs)
             val responseBuffer = mutableListOf<Byte>()
 

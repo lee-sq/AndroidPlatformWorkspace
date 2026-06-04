@@ -1,6 +1,7 @@
 package com.holderzone.device.core.sniffer
 
 import com.holderzone.device.api.base.model.ProbeResult
+import com.holderzone.device.core.channel.SelfManagedSerialChannel
 import com.holderzone.device.core.channel.SerialPortInfo
 import com.holderzone.device.core.channel.SerialPortManager
 import com.holderzone.device.core.strategy.StrategyRegistry
@@ -21,10 +22,17 @@ class AutoSniffer(
         val ports = serialPortManager.listPorts()
         for (driver in drivers) {
             // 优先尝试驱动声明的常用端口，可以缩短真实硬件上的探测时间。
-            val orderedPorts = ports.prefer(driver.descriptor.preferredPortPaths)
+            val orderedPorts = ports.candidatesFor(
+                preferredPortPaths = driver.descriptor.preferredPortPaths,
+                selfManagedConnection = driver.descriptor.selfManagedConnection,
+            )
             for (port in orderedPorts) {
                 for (config in driver.descriptor.supportedConfigs) {
-                    val channel = serialPortManager.openChannel(port.path, config)
+                    val channel = if (driver.descriptor.selfManagedConnection) {
+                        SelfManagedSerialChannel(port.path, config)
+                    } else {
+                        serialPortManager.openChannel(port.path, config)
+                    }
                     when (val result = probePipeline.probe(driver, channel)) {
                         is ProbeResult.Matched -> {
                             return SniffResult.Matched(
@@ -46,14 +54,16 @@ class AutoSniffer(
         return SniffResult.NoMatch
     }
 
-    private fun List<SerialPortInfo>.prefer(
+    private fun List<SerialPortInfo>.candidatesFor(
         preferredPortPaths: List<String>,
+        selfManagedConnection: Boolean,
     ): List<SerialPortInfo> {
         if (preferredPortPaths.isEmpty()) return this
 
-        val preferred = preferredPortPaths.mapNotNull { preferredPath ->
-            firstOrNull { it.path == preferredPath }
+        val preferred = preferredPortPaths.map { preferredPath ->
+            firstOrNull { it.path == preferredPath } ?: SerialPortInfo(preferredPath)
         }
+        if (selfManagedConnection) return preferred
         return (preferred + filterNot { port -> preferred.any { it.path == port.path } })
     }
 }

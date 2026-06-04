@@ -47,4 +47,8 @@ dependencies {
     api(project(":device-api-scale"))
     api(project(":device-api-cabinet"))
     api(project(":device-core"))
+    implementation(files("src/main/libs/star/xspret.jar"))
+    implementation(files("src/main/libs/star/SerialportPrintSDK.jar"))
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

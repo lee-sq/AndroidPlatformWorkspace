@@ -17,11 +17,14 @@ import com.holderzone.device.api.base.strategy.IDeviceDriver
 import com.holderzone.device.api.base.strategy.IDeviceFactory
 import com.holderzone.device.api.base.strategy.IFrameParser
 import com.holderzone.device.api.base.strategy.IHeartbeatProvider
+import com.holderzone.device.api.base.strategy.IPollingProvider
 import com.holderzone.device.api.base.strategy.IProbeStrategy
+import com.holderzone.device.api.base.strategy.PollingCommand
 import com.holderzone.device.api.scale.capability.IWeighable
 import com.holderzone.device.api.scale.model.WeightResult
 import com.holderzone.device.api.scale.model.WeightUnit
 import com.holderzone.device.core.channel.FrameStreamReader
+import com.holderzone.device.core.channel.SerialBackend
 import com.holderzone.device.core.channel.InMemorySerialBackend
 import com.holderzone.device.core.channel.InMemorySerialChannel
 import com.holderzone.device.core.channel.SerialPortInfo
@@ -120,6 +123,42 @@ class DeviceRuntimeTest {
     }
 
     @Test
+    fun startAutoSniffingTriesPreferredPortsEvenWhenListPortsMissesThem() = runTest(dispatcher) {
+        val openedPorts = mutableListOf<String>()
+        val backend = InMemorySerialBackend(
+            ports = listOf(SerialPortInfo(path = "/dev/ttyS0")),
+            channelFactory = { portPath, config ->
+                openedPorts += portPath
+                InMemorySerialChannel(
+                    portPath = portPath,
+                    config = config,
+                    readBuffer = ArrayDeque(
+                        if (portPath == "/dev/ttyS2") {
+                            listOf("MATCH".encodeToByteArray())
+                        } else {
+                            listOf("MISS".encodeToByteArray())
+                        },
+                    ),
+                )
+            },
+        )
+        val manager = DeviceManager(
+            serialPortManager = SerialPortManager(backend),
+            coroutineScope = this,
+        )
+        manager.registerDriver(RuntimeTestDriver(preferredPortPaths = listOf("/dev/ttyS2")))
+
+        manager.startAutoSniffing()
+        runCurrent()
+
+        val deviceId = "${RuntimeTestDriver.STRATEGY_ID}:/dev/ttyS2"
+        assertEquals("/dev/ttyS2", openedPorts.first())
+        assertEquals(ConnectionState.CONNECTED, manager.observeDevice(deviceId).value)
+        manager.clear()
+        advanceUntilIdle()
+    }
+
+    @Test
     fun startAutoSniffingPublishesLifecycleLogsWhenInfoIsEnabled() = runTest(dispatcher) {
         val backend = InMemorySerialBackend(
             ports = listOf(SerialPortInfo(path = "/dev/ttyS0")),
@@ -202,6 +241,211 @@ class DeviceRuntimeTest {
     }
 
     @Test
+    fun startAutoSniffingHonorsProbeSettleDelayBeforeReadingReport() = runTest(dispatcher) {
+        val backend = InMemorySerialBackend(
+            ports = listOf(SerialPortInfo(path = "/dev/ttyS0")),
+            channelFactory = { portPath, config ->
+                InMemorySerialChannel(
+                    portPath = portPath,
+                    config = config,
+                    readBuffer = ArrayDeque(listOf("MATCH".encodeToByteArray())),
+                )
+            },
+        )
+        val manager = DeviceManager(
+            serialPortManager = SerialPortManager(backend),
+            coroutineScope = this,
+        )
+        manager.registerDriver(
+            RuntimeTestDriver(
+                probeSettleDelayMs = 300L,
+            ),
+        )
+
+        try {
+            manager.startAutoSniffing()
+            runCurrent()
+
+            val deviceId = "${RuntimeTestDriver.STRATEGY_ID}:/dev/ttyS0"
+            assertEquals(ConnectionState.DISCONNECTED, manager.observeDevice(deviceId).value)
+
+            advanceTimeBy(299L)
+            runCurrent()
+            assertEquals(ConnectionState.DISCONNECTED, manager.observeDevice(deviceId).value)
+
+            advanceTimeBy(1L)
+            runCurrent()
+            assertEquals(ConnectionState.CONNECTED, manager.observeDevice(deviceId).value)
+        } finally {
+            manager.clear()
+            advanceUntilIdle()
+        }
+    }
+
+    @Test
+    fun startAutoSniffingBindsSelfManagedDriverWithoutReadingSerialBytes() = runTest(dispatcher) {
+        val openedChannels = mutableListOf<InMemorySerialChannel>()
+        val backend = InMemorySerialBackend(
+            ports = listOf(SerialPortInfo(path = "/dev/ttyS0")),
+            channelFactory = { portPath, config ->
+                InMemorySerialChannel(
+                    portPath = portPath,
+                    config = config,
+                ).also(openedChannels::add)
+            },
+        )
+        val manager = DeviceManager(
+            serialPortManager = SerialPortManager(backend),
+            coroutineScope = this,
+        )
+        manager.registerDriver(
+            RuntimeTestDriver(
+                selfManagedConnection = true,
+            ),
+        )
+
+        try {
+            manager.startAutoSniffing()
+            runCurrent()
+
+            val deviceId = "${RuntimeTestDriver.STRATEGY_ID}:/dev/ttyS0"
+            assertEquals(ConnectionState.CONNECTED, manager.observeDevice(deviceId).value)
+            assertEquals(emptyList<InMemorySerialChannel>(), openedChannels)
+        } finally {
+            manager.clear()
+            advanceUntilIdle()
+        }
+    }
+
+    @Test
+    fun pollingDriverWritesCommandsFromCoreAndParsesResponses() = runTest(dispatcher) {
+        val driver = RuntimeTestDriver(
+            pollingCommands = listOf(
+                PollingCommand(
+                    payload = "POLL_WEIGHT".encodeToByteArray(),
+                    intervalMs = 100L,
+                ),
+                PollingCommand(
+                    payload = "POLL_DOOR".encodeToByteArray(),
+                    intervalMs = 100L,
+                ),
+            ),
+        )
+        val manager = DeviceManager(coroutineScope = this)
+        val channel = InMemorySerialChannel(
+            portPath = "/dev/ttyS2",
+            config = SerialConfig(baudRate = 9_600),
+            readBuffer = ArrayDeque(listOf("DATA|".encodeToByteArray())),
+        )
+
+        try {
+            val device = manager.bindSession(driver, channel)
+            runCurrent()
+
+            assertEquals(ConnectionState.CONNECTED, manager.observeDevice(device.info.deviceId).value)
+            assertEquals(1, driver.parser.parsedFrames.size)
+            assertEquals(listOf("POLL_WEIGHT"), channel.writes.map { it.decodeToString() })
+
+            advanceTimeBy(100L)
+            runCurrent()
+
+            assertEquals(
+                listOf("POLL_WEIGHT", "POLL_DOOR"),
+                channel.writes.map { it.decodeToString() },
+            )
+        } finally {
+            manager.clear()
+            advanceUntilIdle()
+        }
+    }
+
+    @Test
+    fun reconnectTriesOriginalPortBeforeFullSniff() = runTest(dispatcher) {
+        val openedPorts = mutableListOf<String>()
+        val backend = InMemorySerialBackend(
+            ports = listOf(SerialPortInfo(path = "/dev/ttyS9")),
+            channelFactory = { portPath, config ->
+                openedPorts += portPath
+                InMemorySerialChannel(
+                    portPath = portPath,
+                    config = config,
+                )
+            },
+        )
+        val manager = DeviceManager(
+            serialPortManager = SerialPortManager(backend),
+            coroutineScope = this,
+        )
+        val channel = FailingReadSerialChannel(
+            portPath = "/dev/ttyS2",
+            config = SerialConfig(baudRate = 9_600),
+        )
+
+        try {
+            val device = manager.bindSession(RuntimeTestDriver(), channel)
+            runCurrent()
+
+            assertEquals(ConnectionState.RECONNECTING, manager.observeDevice(device.info.deviceId).value)
+
+            advanceTimeBy(1_000L)
+            runCurrent()
+
+            assertEquals(listOf("/dev/ttyS2"), openedPorts)
+            assertEquals(ConnectionState.CONNECTED, manager.observeDevice(device.info.deviceId).value)
+        } finally {
+            manager.clear()
+            advanceUntilIdle()
+        }
+    }
+
+    @Test
+    fun reconnectFallsBackToFullSniffWhenOriginalPortFails() = runTest(dispatcher) {
+        val openedPorts = mutableListOf<String>()
+        val backend = object : SerialBackend {
+            override fun listPorts(): List<SerialPortInfo> = listOf(SerialPortInfo(path = "/dev/ttyS1"))
+
+            override fun createChannel(portPath: String, config: SerialConfig): SerialChannel {
+                openedPorts += portPath
+                if (portPath == "/dev/ttyS2") {
+                    error("Original port unavailable.")
+                }
+                return InMemorySerialChannel(
+                    portPath = portPath,
+                    config = config,
+                    readBuffer = ArrayDeque(listOf("MATCH".encodeToByteArray())),
+                )
+            }
+        }
+        val manager = DeviceManager(
+            serialPortManager = SerialPortManager(backend),
+            coroutineScope = this,
+        )
+        val driver = RuntimeTestDriver()
+        manager.registerDriver(driver)
+        val channel = FailingReadSerialChannel(
+            portPath = "/dev/ttyS2",
+            config = SerialConfig(baudRate = 9_600),
+        )
+
+        try {
+            val oldDevice = manager.bindSession(driver, channel)
+            runCurrent()
+
+            assertEquals(ConnectionState.RECONNECTING, manager.observeDevice(oldDevice.info.deviceId).value)
+
+            advanceTimeBy(1_000L)
+            runCurrent()
+
+            val nextDeviceId = "${RuntimeTestDriver.STRATEGY_ID}:/dev/ttyS1"
+            assertEquals(listOf("/dev/ttyS2", "/dev/ttyS1"), openedPorts)
+            assertEquals(ConnectionState.CONNECTED, manager.observeDevice(nextDeviceId).value)
+        } finally {
+            manager.clear()
+            advanceUntilIdle()
+        }
+    }
+
+    @Test
     fun readLoopFailurePublishesErrorAndWarnLogsWithDefaultMinimumLevel() = runTest(dispatcher) {
         val manager = DeviceManager(
             coroutineScope = this,
@@ -215,7 +459,7 @@ class DeviceRuntimeTest {
             config = SerialConfig(baudRate = 9_600),
         )
 
-        val device = manager.bindDeviceSession(RuntimeTestDriver(), channel)
+        val device = manager.bindSession(RuntimeTestDriver(), channel)
         runCurrent()
 
         assertEquals(ConnectionState.RECONNECTING, manager.observeDevice(device.info.deviceId).value)
@@ -257,7 +501,11 @@ class DeviceRuntimeTest {
         private val preferredPortPaths: List<String> = emptyList(),
         private val communicationMode: CommunicationMode = CommunicationMode.PASSIVE_RESPONSE,
         private val probeTimeoutMs: Long? = null,
-    ) : IDeviceDriver {
+        private val probeSettleDelayMs: Long = 0L,
+        private val selfManagedConnection: Boolean = false,
+        override val pollingCommands: List<PollingCommand> = emptyList(),
+    ) : IDeviceDriver,
+        IPollingProvider {
         val parser = RuntimeFrameParser()
 
         override val descriptor = DriverDescriptor(
@@ -269,6 +517,8 @@ class DeviceRuntimeTest {
             supportedConfigs = listOf(SerialConfig(baudRate = 9_600)),
             preferredPortPaths = preferredPortPaths,
             probeTimeoutMs = probeTimeoutMs,
+            probeSettleDelayMs = probeSettleDelayMs,
+            selfManagedConnection = selfManagedConnection,
             capabilities = setOf(IWeighable::class),
         )
 
@@ -276,7 +526,7 @@ class DeviceRuntimeTest {
             override fun buildProbeFrame(): ByteArray = "PROBE".encodeToByteArray()
 
             override fun validateResponse(response: ByteArray): ProbeResult {
-                return if (response.decodeToString() == "MATCH") {
+                return if (selfManagedConnection || response.decodeToString() == "MATCH") {
                     ProbeResult.Matched(deviceModel = "RuntimeTest")
                 } else {
                     ProbeResult.Mismatched

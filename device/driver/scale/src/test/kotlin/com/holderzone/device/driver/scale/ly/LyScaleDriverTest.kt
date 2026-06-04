@@ -19,7 +19,7 @@ class LyScaleDriverTest {
         )
         val manager = DeviceManager()
 
-        val device = manager.bindDevice(driver, channel)
+        val device = manager.bindSession(driver, channel)
 
         assertEquals("${LyScaleDriver.STRATEGY_ID}:${LyScaleDriver.DEFAULT_PORT_PATHS.first()}", device.info.deviceId)
         assertNotNull(manager.queryCapability<IWeighable>(device.info.deviceId))
@@ -34,7 +34,7 @@ class LyScaleDriverTest {
             config = driver.descriptor.supportedConfigs.first(),
         )
         val manager = DeviceManager()
-        val device = manager.bindDevice(driver, channel)
+        val device = manager.bindSession(driver, channel)
         val weighable = manager.queryCapability<IWeighable>(device.info.deviceId)!!
 
         weighable.tare()
@@ -51,7 +51,7 @@ class LyScaleDriverTest {
         val descriptor = LyScaleDriver().descriptor
 
         assertEquals("scale.liangyue.ascii", descriptor.strategyId)
-        assertEquals(listOf("/dev/ttyS1", "/dev/ttyS3", "/dev/ttyS2"), descriptor.preferredPortPaths)
+        assertEquals(listOf("/dev/ttyS4", "/dev/ttyS0"), descriptor.preferredPortPaths)
         assertEquals(9_600, descriptor.supportedConfigs.single().baudRate)
         assertEquals(20, descriptor.priority)
     }

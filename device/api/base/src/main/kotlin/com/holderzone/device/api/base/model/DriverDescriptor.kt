@@ -28,4 +28,8 @@ data class DriverDescriptor(
     val priority: Int = 100,
     /** 单个候选串口的探测观察窗口；不配置时由通信模式决定默认值。 */
     val probeTimeoutMs: Long? = null,
+    /** 串口打开后、发送探测命令或读取主动上报前的等待时间，用于兼容硬件上电或上报延迟。 */
+    val probeSettleDelayMs: Long = 0L,
+    /** 是否由 driver 或厂商 SDK 自己打开和维护连接；为 true 时 core 不占用真实串口读循环。 */
+    val selfManagedConnection: Boolean = false,
 )

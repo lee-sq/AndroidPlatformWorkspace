@@ -49,12 +49,50 @@ class DeviceManager(
         extraBufferCapacity = LOG_EVENT_BUFFER_CAPACITY,
     )
     private val logListeners = CopyOnWriteArraySet<DeviceLogListener>()
+    private val runtimeHost = object : DeviceRuntimeHost {
+        override suspend fun bindDeviceInternal(driver: IDeviceDriver, channel: SerialChannel): IDevice {
+            return this@DeviceManager.bindDeviceInternal(driver, channel)
+        }
+
+        override fun unbindDevice(deviceId: String) {
+            this@DeviceManager.unbindDevice(deviceId)
+        }
+
+        override fun updateState(deviceId: String, state: ConnectionState) {
+            this@DeviceManager.updateState(deviceId, state)
+        }
+
+        override fun markGlobalState(state: ConnectionState) {
+            this@DeviceManager.markGlobalState(state)
+        }
+
+        override fun emitLog(
+            level: DeviceLogLevel,
+            tag: String,
+            message: String,
+            deviceId: String?,
+            strategyId: String?,
+            portPath: String?,
+            throwable: Throwable?,
+        ) {
+            this@DeviceManager.emitLog(
+                level = level,
+                tag = tag,
+                message = message,
+                deviceId = deviceId,
+                strategyId = strategyId,
+                portPath = portPath,
+                throwable = throwable,
+            )
+        }
+    }
     private val runtime = DeviceRuntime(
-        deviceManager = this,
+        host = runtimeHost,
         autoSniffer = AutoSniffer(
             serialPortManager = serialPortManager,
             strategyRegistry = strategyRegistry,
         ),
+        serialPortManager = serialPortManager,
         scope = coroutineScope,
         watchdogPolicy = watchdogPolicy,
     )
@@ -93,7 +131,7 @@ class DeviceManager(
     }
 
     /** 打开通道、执行驱动初始化、创建设备、聚合能力，并发布绑定事件。 */
-    suspend fun bindDevice(driver: IDeviceDriver, channel: SerialChannel): IDevice {
+    private suspend fun bindDeviceInternal(driver: IDeviceDriver, channel: SerialChannel): IDevice {
         channel.open()
         check(driver.deviceFactory.initialize(channel)) {
             "Driver ${driver.descriptor.strategyId} failed to initialize ${channel.portPath}."
@@ -124,11 +162,12 @@ class DeviceManager(
             deviceId = device.info.deviceId,
             strategyId = driver.descriptor.strategyId,
             portPath = channel.portPath,
+            throwable = null,
         )
         return device
     }
 
-    suspend fun bindDeviceSession(driver: IDeviceDriver, channel: SerialChannel): IDevice {
+    suspend fun bindSession(driver: IDeviceDriver, channel: SerialChannel): IDevice {
         return runtime.bindSession(driver, channel)
     }
 
@@ -174,6 +213,8 @@ class DeviceManager(
             message = "设备已解绑：$deviceId",
             deviceId = deviceId,
             strategyId = record.driver.descriptor.strategyId,
+            portPath = null,
+            throwable = null,
         )
     }
 
@@ -222,6 +263,10 @@ class DeviceManager(
             level = DeviceLogLevel.INFO,
             tag = TAG,
             message = "设备管理器已清空。",
+            deviceId = null,
+            strategyId = null,
+            portPath = null,
+            throwable = null,
         )
     }
 
@@ -234,7 +279,7 @@ class DeviceManager(
         logListeners -= listener
     }
 
-    internal fun emitLog(
+    fun emitLog(
         level: DeviceLogLevel,
         tag: String,
         message: String,
@@ -285,6 +330,8 @@ class DeviceManager(
             message = "设备状态变更：$deviceId，${previousState ?: "-"} -> $state",
             deviceId = deviceId,
             strategyId = deviceRegistry.find(deviceId)?.driver?.descriptor?.strategyId,
+            portPath = null,
+            throwable = null,
         )
     }
 

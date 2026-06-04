@@ -55,7 +55,7 @@ class DeviceManagerTest {
     fun queryCapabilityReturnsImplementedCapability() = runTest {
         val manager = DeviceManager()
         val driver = FakeScaleDriver()
-        val device = manager.bindDevice(driver, fakeChannel())
+        val device = manager.bindSession(driver, fakeChannel())
 
         val weighable = manager.queryCapability<IWeighable>(device.info.deviceId)
         assertNotNull(weighable)
@@ -67,7 +67,7 @@ class DeviceManagerTest {
     fun queryCapabilityDoesNotReturnUnsupportedCapability() = runTest {
         val manager = DeviceManager()
         val driver = FakeScaleDriver()
-        val device = manager.bindDevice(driver, fakeChannel())
+        val device = manager.bindSession(driver, fakeChannel())
 
         assertNull(manager.queryCapability<ILockable>(device.info.deviceId))
     }
@@ -80,7 +80,7 @@ class DeviceManagerTest {
         assertEquals(emptyList<IDevice>(), manager.devices.value)
         assertEquals(0, manager.deviceRecords.value.size)
 
-        val device = manager.bindDevice(driver, fakeChannel())
+        val device = manager.bindSession(driver, fakeChannel())
 
         assertEquals(listOf(device), manager.devices.value)
         assertEquals(ConnectionState.CONNECTED, manager.deviceRecords.value.single().state)
@@ -104,7 +104,7 @@ class DeviceManagerTest {
             manager.connectionEvents.collect(events::add)
         }
 
-        val device = manager.bindDevice(driver, fakeChannel())
+        val device = manager.bindSession(driver, fakeChannel())
         manager.updateState(device.info.deviceId, ConnectionState.DEGRADED)
         manager.unbindDevice(device.info.deviceId)
 
@@ -196,7 +196,7 @@ class DeviceManagerTest {
             manager.logs.collect(logs::add)
         }
 
-        manager.bindDevice(driver, fakeChannel())
+        manager.bindSession(driver, fakeChannel())
 
         assertFalse(logs.any { it.level == DeviceLogLevel.INFO })
 

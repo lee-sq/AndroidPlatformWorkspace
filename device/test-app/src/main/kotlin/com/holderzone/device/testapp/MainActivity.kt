@@ -232,7 +232,7 @@ class MainActivity : Activity() {
                     config = SerialConfig(baudRate = JWScaleDriver.DEFAULT_BAUD_RATE),
                 )
                 withContext(Dispatchers.IO) {
-                    deviceManager.bindDeviceSession(driver, channel)
+                    deviceManager.bindSession(driver, channel)
                 }
             }.onSuccess { device ->
                 appendLog("绑定成功：${device.info.deviceId}")

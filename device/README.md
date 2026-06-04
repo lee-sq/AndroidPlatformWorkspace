@@ -44,10 +44,11 @@ device/
 1. `SerialPortManager.listPorts()` 通过 `SerialBackend` 枚举端口。
 2. `AutoSniffer` 遍历端口、已注册 driver、driver 支持的 `SerialConfig`。
 3. `ProbePipeline` 打开通道、发送探测帧、读取响应并交给 `IProbeStrategy` 判断。
-4. 匹配成功后 `DeviceManager.bindDevice()` 调用 `IDeviceFactory` 创建设备实例。
+4. 匹配成功后 `DeviceManager.bindSession()` 调用 `IDeviceFactory` 创建设备实例并建立完整运行会话。
 5. `SerialReadLoop` 后台持续读取字节流。
 6. `FrameStreamReader` 使用 driver 的 `IFrameParser` 处理半包、粘包并切出完整帧。
-7. `DeviceRuntime` 对主动上报设备启动看门狗，超时或读循环异常后进入重连扫描。
+7. 对问答轮询型设备，driver 通过 `IPollingProvider` 声明命令，`SerialPollingLoop` 在 core 中统一调度写入。
+8. `DeviceRuntime` 对主动上报和轮询设备启动看门狗，超时、读循环异常或轮询写入异常后优先尝试原端口重连，失败再全量探测。
 
 ## Real Serial Backend
 

@@ -4,6 +4,14 @@
     public protected *;
 }
 
+-keep class com.xingx.** { *; }
+-keep class com.kongqw.serialportlibrary.** { *; }
+-keep class com.june.serialport.** { *; }
+
+-dontwarn com.xingx.**
+-dontwarn com.kongqw.serialportlibrary.**
+-dontwarn com.june.serialport.**
+
 -keepattributes Signature
 -keepattributes InnerClasses,EnclosingMethod
 -keepattributes RuntimeVisibleAnnotations,RuntimeInvisibleAnnotations

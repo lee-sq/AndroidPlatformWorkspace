@@ -14,14 +14,14 @@ class JWScaleDriverTest {
     fun bindCreatesWeighableDeviceAndWritesInitializationCommand() = runTest {
         val driver = JWScaleDriver()
         val channel = InMemorySerialChannel(
-            portPath = JWScaleDriver.DEFAULT_PORT_PATH,
+            portPath = JWScaleDriver.DEFAULT_PORT_PATH.first(),
             config = driver.descriptor.supportedConfigs.first(),
         )
         val manager = DeviceManager()
 
-        val device = manager.bindDevice(driver, channel)
+        val device = manager.bindSession(driver, channel)
 
-        assertEquals("${JWScaleDriver.STRATEGY_ID}:${JWScaleDriver.DEFAULT_PORT_PATH}", device.info.deviceId)
+        assertEquals("${JWScaleDriver.STRATEGY_ID}:${JWScaleDriver.DEFAULT_PORT_PATH.first()}", device.info.deviceId)
         assertNotNull(manager.queryCapability<IWeighable>(device.info.deviceId))
         assertEquals(
             "01030100001045FA",
@@ -33,11 +33,11 @@ class JWScaleDriverTest {
     fun zeroAndTareWriteControlCommands() = runTest {
         val driver = JWScaleDriver()
         val channel = InMemorySerialChannel(
-            portPath = JWScaleDriver.DEFAULT_PORT_PATH,
+            portPath = JWScaleDriver.DEFAULT_PORT_PATH.first(),
             config = driver.descriptor.supportedConfigs.first(),
         )
         val manager = DeviceManager()
-        val device = manager.bindDevice(driver, channel)
+        val device = manager.bindSession(driver, channel)
         val weighable = manager.queryCapability<IWeighable>(device.info.deviceId)!!
 
         weighable.zero()
@@ -57,8 +57,8 @@ class JWScaleDriverTest {
     fun descriptorUses3568SerialDefaults() {
         val descriptor = JWScaleDriver().descriptor
 
-        assertEquals("scale.jingwei.3568", descriptor.strategyId)
-        assertEquals(listOf("/dev/ttyS7"), descriptor.preferredPortPaths)
+        assertEquals("scale.jingwei", descriptor.strategyId)
+        assertEquals(listOf("/dev/ttyS7", "/dev/ttyS2"), descriptor.preferredPortPaths)
         assertEquals(19_200, descriptor.supportedConfigs.single().baudRate)
         assertEquals(10, descriptor.priority)
     }
