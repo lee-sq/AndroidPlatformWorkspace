@@ -2,6 +2,45 @@
 
 `device` 包按框架层级组织目录，Gradle module 按稳定发布边界拆分。新增设备型号时，默认只在对应领域 driver module 内新增包目录，不新增 Gradle module。
 
+## JitPack Usage
+
+`device` 作为一个设备能力包统一发版，tag 使用 `device-v<semver>`，例如：
+
+```bash
+git tag device-v0.1.0
+git push origin device-v0.1.0
+```
+
+业务 App 推荐只依赖对应领域的 starter module：
+
+```kotlin
+repositories {
+    google()
+    mavenCentral()
+    maven("https://jitpack.io")
+}
+
+dependencies {
+    implementation("com.github.lee-sq.AndroidPlatformWorkspace:device-starter-scale:device-v0.1.0")
+    implementation("com.github.lee-sq.AndroidPlatformWorkspace:device-starter-cabinet:device-v0.1.0")
+}
+```
+
+`device-starter-scale` 会传递引入称重 API、core 和称重驱动；`device-starter-cabinet` 会传递引入柜体 API、core 和柜体驱动。只有需要精细裁剪或手动注册 driver 时，才建议直接依赖 `device-api-*`、`device-core` 或 `device-driver-*`。
+
+JitPack 构建 `device-v*` tag 时会发布以下 library module，不发布测试 App：
+
+```text
+:device-api-base
+:device-api-scale
+:device-api-cabinet
+:device-core
+:device-driver-scale
+:device-driver-cabinet
+:device-starter-scale
+:device-starter-cabinet
+```
+
 ## Module Layout
 
 ```text

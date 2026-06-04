@@ -7,9 +7,28 @@ install:
       foundation-core-v*)
         ./gradlew :foundation-core:testDebugUnitTest :foundation-core:publishReleasePublicationToMavenLocal
         ;;
+      device-v*)
+        ./gradlew \
+          :device-api-base:testDebugUnitTest \
+          :device-api-scale:testDebugUnitTest \
+          :device-api-cabinet:testDebugUnitTest \
+          :device-core:testDebugUnitTest \
+          :device-driver-scale:testDebugUnitTest \
+          :device-driver-cabinet:testDebugUnitTest \
+          :device-starter-scale:testDebugUnitTest \
+          :device-starter-cabinet:testDebugUnitTest \
+          :device-api-base:publishReleasePublicationToMavenLocal \
+          :device-api-scale:publishReleasePublicationToMavenLocal \
+          :device-api-cabinet:publishReleasePublicationToMavenLocal \
+          :device-core:publishReleasePublicationToMavenLocal \
+          :device-driver-scale:publishReleasePublicationToMavenLocal \
+          :device-driver-cabinet:publishReleasePublicationToMavenLocal \
+          :device-starter-scale:publishReleasePublicationToMavenLocal \
+          :device-starter-cabinet:publishReleasePublicationToMavenLocal
+        ;;
       *)
         echo "Unsupported JitPack version tag: $VERSION"
-        echo "Use a module-scoped tag, for example: foundation-core-v0.1.0"
+        echo "Use a supported module-scoped tag, for example: foundation-core-v0.1.0 or device-v0.1.0"
         exit 1
         ;;
     esac
