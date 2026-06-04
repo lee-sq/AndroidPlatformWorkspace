@@ -77,11 +77,11 @@ abstract class BaseActivity : AppCompatActivity() {
             .show(WindowInsetsCompat.Type.systemBars())
     }
 
-    fun hideNav() {
+    open fun hideNav() {
         hideSystemBars()
     }
 
-    fun getPermission(
+    open fun getPermission(
         permissions: List<String> = defaultPermissions(),
     ) {
         PermissionX.init(this)
