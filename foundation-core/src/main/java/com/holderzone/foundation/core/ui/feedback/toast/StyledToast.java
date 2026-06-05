@@ -510,7 +510,8 @@ public final class StyledToast {
             boolean withIcon,
             boolean shouldTint
     ) {
-        final Toast currentToast = Toast.makeText(context, "", duration);
+        final Toast currentToast = new Toast(context.getApplicationContext());
+        currentToast.setDuration(duration);
         final View toastLayout = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
                 .inflate(R.layout.foundation_toast_layout, null);
         final LinearLayout toastRoot = toastLayout.findViewById(R.id.foundation_toast_root);

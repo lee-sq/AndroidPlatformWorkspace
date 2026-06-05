@@ -5,7 +5,6 @@ import android.content.res.Configuration
 import android.content.res.Resources
 import android.os.Build
 import android.os.Bundle
-import android.widget.Toast
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
@@ -14,6 +13,8 @@ import androidx.core.view.WindowInsetsControllerCompat
 import com.holderzone.foundation.core.R
 import com.holderzone.foundation.core.platform.keyboard.SoftKeyboardUtils
 import com.holderzone.foundation.core.platform.logging.AppLogger
+import com.holderzone.foundation.core.ui.feedback.FoundationPermissionDialog
+import com.holderzone.foundation.core.ui.feedback.toast.StyledToast
 import com.permissionx.guolindev.PermissionX
 
 abstract class BaseActivity : AppCompatActivity() {
@@ -88,37 +89,57 @@ abstract class BaseActivity : AppCompatActivity() {
             .permissions(*permissions.toTypedArray())
             .onExplainRequestReason { scope, deniedList ->
                 scope.showRequestReasonDialog(
-                    deniedList,
-                    resources.getString(R.string.foundation_permission_agreement_tips),
-                    resources.getString(R.string.foundation_permission_agree),
-                    resources.getString(R.string.foundation_permission_cancel),
+                    createPermissionDialog(
+                        deniedList = deniedList,
+                        message = resources.getString(R.string.foundation_permission_agreement_tips),
+                        positiveText = resources.getString(R.string.foundation_permission_agree),
+                        negativeText = resources.getString(R.string.foundation_permission_cancel),
+                    ),
                 )
             }
             .onForwardToSettings { scope, deniedList ->
                 scope.showForwardToSettingsDialog(
-                    deniedList,
-                    resources.getString(R.string.foundation_permission_notify_go_system_setting),
-                    resources.getString(R.string.foundation_permission_go_setting),
-                    resources.getString(R.string.foundation_permission_cancel),
+                    createPermissionDialog(
+                        deniedList = deniedList,
+                        message = resources.getString(R.string.foundation_permission_notify_go_system_setting),
+                        positiveText = resources.getString(R.string.foundation_permission_go_setting),
+                        negativeText = resources.getString(R.string.foundation_permission_cancel),
+                    ),
                 )
             }
             .request { allGranted, _, deniedList ->
                 if (allGranted) {
                     onPermissionGet()
                 } else {
-                    Toast.makeText(
+                    StyledToast.error(
                         this,
                         resources.getString(
                             R.string.foundation_permission_denied,
                             deniedList.joinToString(),
                         ),
-                        Toast.LENGTH_SHORT,
+                        StyledToast.LENGTH_SHORT,
                     ).show()
                 }
             }
     }
 
     open fun onPermissionGet() = Unit
+
+    private fun createPermissionDialog(
+        deniedList: List<String>,
+        message: String,
+        positiveText: String,
+        negativeText: String?,
+    ): FoundationPermissionDialog {
+        return FoundationPermissionDialog(
+            context = this,
+            permissions = deniedList,
+            title = resources.getString(R.string.foundation_permission_title),
+            message = message,
+            positiveText = positiveText,
+            negativeText = negativeText,
+        )
+    }
 
     private fun applyDefaultFontScale(resources: Resources) {
         val configuration = Configuration(resources.configuration).apply {
