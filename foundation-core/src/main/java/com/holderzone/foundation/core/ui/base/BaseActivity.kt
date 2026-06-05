@@ -85,8 +85,13 @@ abstract class BaseActivity : AppCompatActivity() {
     open fun getPermission(
         permissions: List<String> = defaultPermissions(),
     ) {
+        val runtimePermissions = normalizePermissions(permissions)
+        if (runtimePermissions.isEmpty()) {
+            onPermissionGet()
+            return
+        }
         PermissionX.init(this)
-            .permissions(*permissions.toTypedArray())
+            .permissions(*runtimePermissions.toTypedArray())
             .onExplainRequestReason { scope, deniedList ->
                 scope.showRequestReasonDialog(
                     createPermissionDialog(
@@ -125,6 +130,30 @@ abstract class BaseActivity : AppCompatActivity() {
 
     open fun onPermissionGet() = Unit
 
+    private fun normalizePermissions(permissions: List<String>): List<String> {
+        val normalizedPermissions = linkedSetOf<String>()
+        permissions.forEach { permission ->
+            when {
+                permission.isBlank() -> Unit
+                permission == Manifest.permission.INTERNET -> Unit
+                permission == Manifest.permission.POST_NOTIFICATIONS &&
+                    Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU -> Unit
+                permission in mediaPermissions &&
+                    Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU -> {
+                    normalizedPermissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+                }
+                permission == Manifest.permission.READ_EXTERNAL_STORAGE &&
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
+                    normalizedPermissions.add(PERMISSION_READ_MEDIA_IMAGES)
+                }
+                permission == Manifest.permission.WRITE_EXTERNAL_STORAGE &&
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> Unit
+                else -> normalizedPermissions.add(permission)
+            }
+        }
+        return normalizedPermissions.toList()
+    }
+
     private fun createPermissionDialog(
         deniedList: List<String>,
         message: String,
@@ -151,12 +180,20 @@ abstract class BaseActivity : AppCompatActivity() {
 
     private companion object {
         private const val DEFAULT_FONT_SCALE = 1f
+        private const val PERMISSION_READ_MEDIA_AUDIO = "android.permission.READ_MEDIA_AUDIO"
+        private const val PERMISSION_READ_MEDIA_IMAGES = "android.permission.READ_MEDIA_IMAGES"
+        private const val PERMISSION_READ_MEDIA_VIDEO = "android.permission.READ_MEDIA_VIDEO"
+        private val mediaPermissions = setOf(
+            PERMISSION_READ_MEDIA_AUDIO,
+            PERMISSION_READ_MEDIA_IMAGES,
+            PERMISSION_READ_MEDIA_VIDEO,
+        )
 
         private fun defaultPermissions(): List<String> {
             return buildList {
                 add(Manifest.permission.CAMERA)
                 if (Build.VERSION.SDK_INT >= 33) {
-                    add(Manifest.permission.READ_MEDIA_IMAGES)
+                    add(PERMISSION_READ_MEDIA_IMAGES)
                 } else {
                     add(Manifest.permission.READ_EXTERNAL_STORAGE)
                 }

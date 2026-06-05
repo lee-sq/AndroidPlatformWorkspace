@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.res.ColorStateList
 import android.graphics.drawable.GradientDrawable
+import android.os.Build
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -230,7 +231,7 @@ class DropdownField @JvmOverloads constructor(
     }
 
     private fun PopupWindow.showAnchoredPopup() {
-        if (!popupUseRootAnchor) {
+        if (!popupUseRootAnchor || Build.VERSION.SDK_INT <= Build.VERSION_CODES.N_MR1) {
             showAsDropDown(
                 this@DropdownField,
                 dropdownXOffset(),
