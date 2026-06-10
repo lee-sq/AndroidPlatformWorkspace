@@ -26,3 +26,6 @@
 -keepclassmembers class com.holderzone.foundation.core.ui.** extends androidx.fragment.app.Fragment {
     public <init>();
 }
+
+-keep class com.yuu.android.component.logbook.** { *; }
+-dontwarn com.yuu.android.component.logbook.**

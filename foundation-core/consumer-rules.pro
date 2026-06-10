@@ -4,6 +4,10 @@
     public protected *;
 }
 
+# Logbook 云端/文件日志策略需要在宿主 App 混淆时保持稳定。
+-keep class com.yuu.android.component.logbook.** { *; }
+-dontwarn com.yuu.android.component.logbook.**
+
 -keepattributes Signature
 -keepattributes InnerClasses,EnclosingMethod
 -keepattributes RuntimeVisibleAnnotations,RuntimeInvisibleAnnotations
