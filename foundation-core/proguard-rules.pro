@@ -29,3 +29,6 @@
 
 -keep class com.yuu.android.component.logbook.** { *; }
 -dontwarn com.yuu.android.component.logbook.**
+
+# 保留 Android Log 类（部分代码直接使用 Log）
+-keep class android.util.Log { *; }

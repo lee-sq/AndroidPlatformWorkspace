@@ -24,3 +24,6 @@
 -keepclassmembers class com.holderzone.foundation.core.ui.** extends androidx.fragment.app.Fragment {
     public <init>();
 }
+
+# 保留 Android Log 类（部分代码直接使用 Log）
+-keep class android.util.Log { *; }

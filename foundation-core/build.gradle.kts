@@ -57,9 +57,7 @@ dependencies {
     api(libs.mmkv)
     api(libs.kotlinx.serialization.json)
     api(libs.permissionx)
-    api(libs.github.logbook) {
-        exclude(group = "com.google.code.gson", module = "gson")
-    }
+    api(libs.github.logbook)
     implementation(libs.github.voice)
 
     testImplementation(libs.junit)

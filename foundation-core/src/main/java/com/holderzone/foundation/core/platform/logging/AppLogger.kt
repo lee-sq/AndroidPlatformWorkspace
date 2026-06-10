@@ -6,7 +6,6 @@ import com.yuu.android.component.logbook.Logbook
 import com.yuu.android.component.logbook.config.LogbookConfig
 import com.yuu.android.component.logbook.config.LoggerConfig
 import com.yuu.android.component.logbook.strategy.LogbookStrategyFile
-import com.yuu.android.component.logbook.strategy.LogbookStrategyServer
 
 object AppLogger {
     private const val DEFAULT_TAG = "AppLogger"
@@ -31,7 +30,7 @@ object AppLogger {
         }
 
         if (config.enableServerStrategy && !config.serverUrl.isNullOrBlank()) {
-            builder.addLogbookStrategy(LogbookStrategyServer(config.serverUrl))
+            builder.addLogbookStrategy(FoundationLogbookServerStrategy(application, config.serverUrl))
         }
 
         Logbook.init(application, builder.build())
