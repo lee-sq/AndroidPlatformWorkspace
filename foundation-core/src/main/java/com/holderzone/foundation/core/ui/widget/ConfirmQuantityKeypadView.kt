@@ -178,6 +178,9 @@ class ConfirmQuantityKeypadView @JvmOverloads constructor(
         palette.doneBackground?.let { doneBackground ->
             doneKey.background = createDoneBackground(doneBackground)
         }
+        palette.doneTextColor?.let { doneTextColor ->
+            doneKey.setTextColor(doneTextColor)
+        }
     }
 
     private fun createDoneBackground(color: Int): RippleDrawable {

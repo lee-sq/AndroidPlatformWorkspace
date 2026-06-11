@@ -14,6 +14,7 @@ data class NumericKeypadPalette @JvmOverloads constructor(
     @param:ColorInt val overlayColor: Int,
     val doneText: CharSequence? = null,
     @param:ColorInt val doneBackground: Int? = null,
+    @param:ColorInt val doneTextColor: Int? = null,
 )
 
 object NumericKeypadThemeSpec {
