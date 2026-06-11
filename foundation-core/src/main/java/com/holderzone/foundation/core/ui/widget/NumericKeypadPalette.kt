@@ -6,12 +6,14 @@ import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
 import com.holderzone.foundation.core.R
 
-data class NumericKeypadPalette(
+data class NumericKeypadPalette @JvmOverloads constructor(
     @param:DrawableRes val surfaceBackground: Int,
     @param:DrawableRes val keyBackground: Int,
     @param:ColorInt val keyTextColor: Int,
     @param:ColorInt val deleteTextColor: Int,
     @param:ColorInt val overlayColor: Int,
+    val doneText: CharSequence? = null,
+    @param:ColorInt val doneBackground: Int? = null,
 )
 
 object NumericKeypadThemeSpec {

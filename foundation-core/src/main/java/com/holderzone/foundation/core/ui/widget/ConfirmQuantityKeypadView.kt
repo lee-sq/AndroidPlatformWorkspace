@@ -1,6 +1,10 @@
 package com.holderzone.foundation.core.ui.widget
 
 import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.RippleDrawable
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
@@ -75,11 +79,12 @@ class ConfirmQuantityKeypadView @JvmOverloads constructor(
 
     fun applyPalette(palette: NumericKeypadPalette) {
         setBackgroundResource(palette.surfaceBackground)
-        (digitKeys + decimalKey + deleteKey + doneKey).forEach { key ->
+        (digitKeys + decimalKey + deleteKey).forEach { key ->
             key.setBackgroundResource(palette.keyBackground)
             key.setTextColor(palette.keyTextColor)
         }
         deleteKey.setTextColor(palette.deleteTextColor)
+        applyDonePalette(palette)
     }
 
     override fun onAttachedToWindow() {
@@ -163,9 +168,41 @@ class ConfirmQuantityKeypadView @JvmOverloads constructor(
         deleteRepeatRunnable = null
     }
 
+    private fun applyDonePalette(palette: NumericKeypadPalette) {
+        doneKey.setBackgroundResource(palette.keyBackground)
+        doneKey.setTextColor(palette.keyTextColor)
+        doneKey.setText(R.string.foundation_keypad_done)
+        palette.doneText?.let { doneText ->
+            doneKey.text = doneText
+        }
+        palette.doneBackground?.let { doneBackground ->
+            doneKey.background = createDoneBackground(doneBackground)
+        }
+    }
+
+    private fun createDoneBackground(color: Int): RippleDrawable {
+        val radius = resources.getDimension(R.dimen.foundation_radius_md)
+        val content = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = radius
+            setColor(color)
+        }
+        return RippleDrawable(ColorStateList.valueOf(color.withPressedAlpha()), content, null)
+    }
+
+    private fun Int.withPressedAlpha(): Int {
+        return Color.argb(
+            (Color.alpha(this) * PRESSED_ALPHA).toInt(),
+            Color.red(this),
+            Color.green(this),
+            Color.blue(this),
+        )
+    }
+
     private companion object {
         private const val ENABLED_ALPHA = 1.0f
         private const val DISABLED_ALPHA = 0.35f
+        private const val PRESSED_ALPHA = 0.72f
         private const val DELETE_REPEAT_START_DELAY_MS = 400L
         private const val DELETE_REPEAT_INTERVAL_MS = 80L
     }
